@@ -1,20 +1,15 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { decodeHTML, titleCase, formatTime } from '../lib/format'
-import { loadDashboard } from '../lib/data'
 import RaceStats from '../components/RaceStats'
-import { Donut, Leaderboard, Section, Card, ActivityRow } from '../components/ui'
 import { Search as SearchIcon, BarChart2, MapPin, Calendar, Check } from 'lucide-react'
 
 export default function Search() {
-  const [overview, setOverview] = useState(null)
   const [query, setQuery]       = useState('')
   const [results, setResults]   = useState(null)
   const [selected, setSelected] = useState(new Set())
   const [loading, setLoading]   = useState(false)
   const [showStats, setShowStats] = useState(false)
-
-  useEffect(() => { loadDashboard().then(setOverview) }, [])
 
   async function search() {
     if (!query.trim()) return
@@ -71,15 +66,14 @@ export default function Search() {
   }
 
   const selectedResults = results?.filter(r => selected.has(r.id)) || []
-  const showOverview    = results === null && !showStats
 
   return (
     <div className="flex flex-col gap-7 max-w-7xl">
 
       {/* Header */}
       <header>
-        <h1 className="text-2xl sm:text-[28px] font-black text-white tracking-tight">Carreras Anteriores</h1>
-        <p className="text-slate-500 text-sm mt-1">Resultados, participantes y estadísticas de las carreras del equipo.</p>
+        <h1 className="text-2xl sm:text-[28px] font-black text-white tracking-tight">Buscar Participante</h1>
+        <p className="text-slate-500 text-sm mt-1">Encontrá los resultados de un corredor en carreras pasadas.</p>
       </header>
 
       {/* Search bar */}
@@ -106,35 +100,6 @@ export default function Search() {
           {loading ? <Spinner /> : 'Buscar'}
         </button>
       </div>
-
-      {/* ── Overview (no query active) ──────────────────────────────────── */}
-      {showOverview && overview && (
-        <>
-          {/* Distribución + Top Participantes */}
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-5">
-            <Section title="Distribución por Tipo" subtitle="Carreras del equipo por disciplina">
-              <Card className="p-6">
-                <Donut data={overview.distribution} total={overview.recent.length * 5} label="Total" />
-              </Card>
-            </Section>
-
-            <Section title="Top Participantes" subtitle="Corredores con más kilómetros">
-              <Card className="p-5">
-                <Leaderboard rows={overview.leaderboard} unit="km" />
-              </Card>
-            </Section>
-          </div>
-
-          {/* Recent activities */}
-          <Section title="Carreras Recientes" subtitle="Últimas competencias y entrenamientos">
-            <Card>
-              {overview.recent.map((a, i) => (
-                <ActivityRow key={a.id} activity={a} first={i === 0} />
-              ))}
-            </Card>
-          </Section>
-        </>
-      )}
 
       {/* ── Search results ──────────────────────────────────────────────── */}
       {results !== null && !showStats && (

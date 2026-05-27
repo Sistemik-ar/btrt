@@ -6,27 +6,26 @@
     "period": "Período Base · Semana 2",
     "dates": "1 — 7 de Junio · 2026",
     "docType": "Planificación Semanal",
-    "docSpec": null,
     "attendance": {
       "label": "📋 Registrá tu asistencia para esta semana",
-      "sub": "Abrís el form una sola vez · marcás los turnos que vas · enviás",
+      "sub":   "Abrís el form una sola vez · marcás los turnos que vas · enviás",
       "okUrl":  "https://docs.google.com/forms/d/e/1FAIpQLSeuDPaLkrdHq4dH1E670Yql85l2EAHtEF5HFM100VH56O3yOw/viewform?usp=pp_url&entry.1016398751=Confirmo",
       "modUrl": "https://docs.google.com/forms/d/e/1FAIpQLSeuDPaLkrdHq4dH1E670Yql85l2EAHtEF5HFM100VH56O3yOw/viewform?usp=pp_url&entry.1016398751=Cancelo"
     },
-    "cards": [
+    "activities": [
       {
-        "id": "c1",
-        "dayLabel": "Lunes / Martes",
+        "id": "a1",
+        "days": ["lun", "mar"],
         "badge": { "type": "quality", "label": "Técnica + Aeróbico" },
         "turnos": [
-          { "text": "Lun ⏰ 18hs" },
-          { "text": "Mar ⏰ 9hs" },
-          { "text": "Mar ⏰ 18hs" }
+          { "day": "lun", "text": "⏰ 18hs" },
+          { "day": "mar", "text": "⏰ 9hs"  },
+          { "day": "mar", "text": "⏰ 18hs" }
         ],
         "turnoNote": "→ el corredor elige UN turno",
         "meetpoint": {
           "text": "La Usina · Virgen de las Nieves",
-          "url": "https://goo.gl/maps/jHvFQjUs8ziDZS1h7?g_st=awb",
+          "url":  "https://goo.gl/maps/jHvFQjUs8ziDZS1h7?g_st=awb",
           "pending": false
         },
         "objective": "Activación neuromuscular + técnica de carrera en terreno natural + rodaje aeróbico Z1-Z2 con mayor volumen que semana 1",
@@ -36,7 +35,6 @@
           "Bloque aeróbico Z1-Z2 con cambios de ritmo cortos: más repeticiones y duración que semana 1",
           "Cierre: trote suave + estiramiento dinámico 5 min"
         ],
-        "note": null,
         "niveles": [
           { "type": "ini", "text": "35 min trote Z1 continuo + técnica básica de pisada. 2 aceleraciones suaves de 30\" al final. Sin cambios de ritmo sostenidos aún." },
           { "type": "med", "text": "50 min Z2 + 5×1' al 78% FC con recuperación activa. Coordinación completa. 5 repeticiones más que S1." },
@@ -45,18 +43,18 @@
         "durationLabel": "90 – 100 min sesión total"
       },
       {
-        "id": "c2",
-        "dayLabel": "Miércoles / Jueves",
+        "id": "a2",
+        "days": ["mie", "jue"],
         "badge": { "type": "hills", "label": "🏔 Cuesta · Fuerza Específica" },
         "turnos": [
-          { "text": "Mié ⏰ 18hs" },
-          { "text": "Jue ⏰ 9hs" },
-          { "text": "Jue ⏰ 18hs" }
+          { "day": "mie", "text": "⏰ 18hs" },
+          { "day": "jue", "text": "⏰ 9hs"  },
+          { "day": "jue", "text": "⏰ 18hs" }
         ],
         "turnoNote": "→ el corredor elige UN turno",
         "meetpoint": {
           "text": "Herradura · Cerro San Martín",
-          "url": "https://maps.app.goo.gl/3LqoQvu4uqTngK5S6?g_st=awb",
+          "url":  "https://maps.app.goo.gl/3LqoQvu4uqTngK5S6?g_st=awb",
           "pending": false
         },
         "objective": "Fuerza específica en subida con mayor volumen de series + adaptación músculo-tendinosa a la pendiente + trabajo excéntrico de bajada técnica activa",
@@ -78,8 +76,8 @@
         "durationLabel": "90 – 110 min sesión total"
       },
       {
-        "id": "c3",
-        "dayLabel": "Viernes",
+        "id": "a3",
+        "days": ["vie"],
         "rest": true,
         "badge": { "type": "rest", "label": "Recuperación" },
         "restBody": {
@@ -91,31 +89,17 @@
         }
       },
       {
-        "id": "c4",
-        "dayLabel": "Domingo",
-        "rest": true,
-        "badge": { "type": "rest", "label": "Descanso" },
-        "restBody": {
-          "title": "Descanso completo",
-          "lines": [
-            "Sin actividad física estructurada.",
-            "Sueño, hidratación y nutrición son el entrenamiento de hoy."
-          ]
-        }
-      },
-      {
-        "id": "c5",
+        "id": "a4",
+        "days": ["sab"],
         "dayLabel": "Sábado — Fondo de Montaña",
-        "saturday": true,
         "badge": { "type": "fondazo", "label": "🏔 D+600–1200m · Mayor desnivel que S1" },
         "turnos": [
-          { "text": "⏰ Salida 8:30hs" }
+          { "day": "sab", "text": "⏰ Salida 8:30hs" }
         ],
         "turnoNote": "📣 Lugar según condiciones climáticas · confirmar por grupo",
         "turnoNoteColor": "orange",
         "meetpoint": {
           "text": "Punto de encuentro a confirmar · se informa por el grupo antes del sábado",
-          "icon": "⚠️",
           "pending": true
         },
         "objective": "Volumen aeróbico prolongado en montaña + adaptación metabólica al esfuerzo continuo en terreno real + mayor desnivel acumulado que semana 1",
@@ -136,6 +120,19 @@
           { "type": "med", "text": "2.5–3.5 hs · D+600-800m · Z2 sostenido · caminar subidas >12% · nutrición planificada · hidratación cada 20-25 min" },
           { "type": "avz", "text": "4–5.5 hs · D+900-1200m · Z2 con picos Z3 tolerados en subidas fuertes · bajada activa técnica · estrategia nutricional detallada obligatoria" }
         ]
+      },
+      {
+        "id": "a5",
+        "days": ["dom"],
+        "rest": true,
+        "badge": { "type": "rest", "label": "Descanso" },
+        "restBody": {
+          "title": "Descanso completo",
+          "lines": [
+            "Sin actividad física estructurada.",
+            "Sueño, hidratación y nutrición son el entrenamiento de hoy."
+          ]
+        }
       }
     ],
     "footer": {

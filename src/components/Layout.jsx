@@ -1,15 +1,16 @@
-import { useState } from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/AuthContext'
 import {
-  LayoutDashboard, Calendar, Trophy, BarChart3, Settings2, LogOut,
-  Menu, ChevronLeft, ChevronRight,
+  LayoutDashboard, Calendar, Trophy, BarChart3, Search as SearchIcon,
+  Settings2, LogOut, Menu, ChevronLeft, ChevronRight, ChevronDown,
 } from 'lucide-react'
 import { isAdmin as checkAdmin } from '../lib/auth'
 
 export default function Layout({ children }) {
   const { user, profile, signOut } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const isAdmin  = checkAdmin(user?.email)
   const [collapsed, setCollapsed] = useState(false)
 
@@ -22,30 +23,33 @@ export default function Layout({ children }) {
     ? profile.name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase()
     : (user?.email?.[0] ?? '?').toUpperCase()
 
-  const st = {
-    active:   { label: 'Al día',         color: 'text-emerald-400', dot: 'bg-emerald-400' },
-    moroso:   { label: 'Pago pendiente', color: 'text-yellow-400',  dot: 'bg-yellow-400'  },
-    inactive: { label: 'Inactivo',       color: 'text-slate-500',   dot: 'bg-slate-500'   },
-  }[profile?.status] ?? { label: 'Al día', color: 'text-emerald-400', dot: 'bg-emerald-400' }
-
   const NAV_GROUPS = [
     {
       label: 'General',
       items: [
-        { to: '/',                       Icon: LayoutDashboard, label: 'Dashboard'     },
-        { to: '/planificacion-semanal',  Icon: Calendar,        label: 'Planificación' },
-        { to: '/buscar',                 Icon: Trophy,          label: 'Carreras Anteriores',  shortLabel: 'Carreras' },
-        { to: '/estadisticas-carreras',  Icon: BarChart3,       label: 'Estadísticas Carreras', shortLabel: 'Stats' },
+        { to: '/',                      Icon: LayoutDashboard, label: 'Dashboard'     },
+        { to: '/planificacion-semanal', Icon: Calendar,        label: 'Planificación' },
+        {
+          Icon: Trophy,
+          label: 'Carreras Anteriores',
+          shortLabel: 'Carreras',
+          children: [
+            { to: '/buscar',                Icon: SearchIcon, label: 'Buscar Participante', shortLabel: 'Buscar' },
+            { to: '/estadisticas-carreras', Icon: BarChart3,  label: 'Estadísticas',        shortLabel: 'Stats'  },
+          ],
+        },
       ],
     },
     ...(isAdmin ? [{
       label: 'Configuración',
-      items: [
-        { to: '/admin', Icon: Settings2, label: 'Admin' },
-      ],
+      items: [{ to: '/admin', Icon: Settings2, label: 'Admin' }],
     }] : []),
   ]
-  const FLAT_NAV = NAV_GROUPS.flatMap(g => g.items)
+
+  // Flattened nav for mobile bottom bar — only leaf links.
+  const FLAT_NAV = NAV_GROUPS.flatMap(g =>
+    g.items.flatMap(it => it.children ?? [it])
+  )
 
   const sidebarW = collapsed ? 72 : 240
 
@@ -65,9 +69,7 @@ export default function Layout({ children }) {
                 onError={e => { e.target.style.display='none'; e.target.nextSibling.style.display='flex' }} />
               <span className="text-brand font-black text-sm hidden w-full h-full items-center justify-center">B</span>
             </div>
-            {!collapsed && (
-              <p className="text-white font-bold text-sm tracking-tight">BANDURRIAS</p>
-            )}
+            {!collapsed && <p className="text-white font-bold text-sm tracking-tight">BANDURRIAS</p>}
           </div>
           <button
             onClick={() => setCollapsed(c => !c)}
@@ -87,31 +89,18 @@ export default function Layout({ children }) {
                   {group.label}
                 </p>
               )}
-              {group.items.map(({ to, Icon, label }) => (
-                <NavLink
-                  key={to}
-                  to={to}
-                  end={to === '/'}
-                  title={collapsed ? label : undefined}
-                  className={({ isActive }) =>
-                    `relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all
-                     ${collapsed ? 'justify-center' : ''}
-                     ${isActive
-                       ? 'bg-brand/8 text-brand'
-                       : 'text-slate-500 hover:text-slate-200 hover:bg-white/4'}`
-                  }
-                >
-                  {({ isActive }) => (
-                    <>
-                      {isActive && !collapsed && (
-                        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-brand rounded-r-full" />
-                      )}
-                      <Icon size={17} strokeWidth={isActive ? 2.2 : 1.8} />
-                      {!collapsed && <span className="truncate">{label}</span>}
-                    </>
-                  )}
-                </NavLink>
-              ))}
+              {group.items.map(item =>
+                item.children
+                  ? (
+                    <NavGroup
+                      key={item.label}
+                      item={item}
+                      collapsed={collapsed}
+                      currentPath={location.pathname}
+                    />
+                  )
+                  : <NavLeaf key={item.to} item={item} collapsed={collapsed} />
+              )}
             </div>
           ))}
         </nav>
@@ -161,15 +150,9 @@ export default function Layout({ children }) {
             </div>
             <p className="text-white font-bold text-sm tracking-tight">BANDURRIAS</p>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1.5">
-              <div className={`w-1.5 h-1.5 rounded-full ${st.dot}`} />
-              <span className={`text-xs font-semibold ${st.color}`}>{st.label}</span>
-            </div>
-            <button onClick={handleSignOut} className="text-slate-500 hover:text-white transition-colors">
-              <LogOut size={16} />
-            </button>
-          </div>
+          <button onClick={handleSignOut} className="text-slate-500 hover:text-white transition-colors">
+            <LogOut size={16} />
+          </button>
         </header>
 
         {/* Page */}
@@ -199,6 +182,73 @@ export default function Layout({ children }) {
           </NavLink>
         ))}
       </nav>
+    </div>
+  )
+}
+
+/* ── Leaf nav link ────────────────────────────────────────────────────── */
+function NavLeaf({ item, collapsed, nested = false }) {
+  const { to, Icon, label } = item
+  return (
+    <NavLink
+      to={to}
+      end={to === '/'}
+      title={collapsed ? label : undefined}
+      className={({ isActive }) =>
+        `relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all
+         ${collapsed ? 'justify-center' : nested ? 'pl-9' : ''}
+         ${isActive ? 'bg-brand/8 text-brand' : 'text-slate-500 hover:text-slate-200 hover:bg-white/4'}`
+      }
+    >
+      {({ isActive }) => (
+        <>
+          {isActive && !collapsed && (
+            <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-brand rounded-r-full" />
+          )}
+          <Icon size={nested ? 14 : 17} strokeWidth={isActive ? 2.2 : 1.8} />
+          {!collapsed && <span className="truncate">{label}</span>}
+        </>
+      )}
+    </NavLink>
+  )
+}
+
+/* ── Expandable nav group (parent w/ children) ────────────────────────── */
+function NavGroup({ item, collapsed, currentPath }) {
+  const { Icon, label, children } = item
+  const childMatches = children.some(c => currentPath.startsWith(c.to))
+  const [open, setOpen] = useState(childMatches)
+
+  useEffect(() => {
+    if (childMatches) setOpen(true)
+  }, [childMatches])
+
+  if (collapsed) {
+    // When collapsed, just show children as inline icons (no parent toggle).
+    return (
+      <>
+        {children.map(c => <NavLeaf key={c.to} item={c} collapsed />)}
+      </>
+    )
+  }
+
+  return (
+    <div className="flex flex-col">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all w-full
+          ${childMatches ? 'text-white' : 'text-slate-500 hover:text-slate-200 hover:bg-white/4'}`}
+      >
+        <Icon size={17} strokeWidth={childMatches ? 2.2 : 1.8} />
+        <span className="truncate flex-1 text-left">{label}</span>
+        <ChevronDown size={13} className={`text-slate-600 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <div className="flex flex-col gap-0.5 mt-0.5">
+          {children.map(c => <NavLeaf key={c.to} item={c} collapsed={false} nested />)}
+        </div>
+      )}
     </div>
   )
 }

@@ -2,7 +2,8 @@ import { supabase } from './supabase'
 import dashboardMock from '../mocks/dashboard.json'
 import weeksMock     from '../mocks/weeks.json'
 
-const USE_MOCK = import.meta.env.DEV
+const USE_MOCK      = import.meta.env.DEV
+const LS_DRAFT_KEY  = (weekId) => `btrt-week-draft-${weekId}`
 
 function getCurrentWeekId() {
   const today  = new Date()
@@ -13,29 +14,83 @@ function getCurrentWeekId() {
 
 /* ── Weeks ──────────────────────────────────────────────────────────────── */
 
-/** Load a single published week by id. Dev=mock, prod=supabase. */
+/**
+ * Load a week plan by id.
+ *
+ *   Dev  → localStorage draft → mock JSON
+ *   Prod → Supabase `weeks.plan` JSONB column (admins also see drafts via RLS)
+ */
 export async function loadWeek(weekId) {
-  if (USE_MOCK) return weeksMock[weekId] ?? null
+  if (USE_MOCK) {
+    try {
+      const raw = localStorage.getItem(LS_DRAFT_KEY(weekId))
+      if (raw) return JSON.parse(raw)
+    } catch { /* ignore */ }
+    return weeksMock[weekId] ?? null
+  }
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('weeks')
-    .select('*, sessions(*)')
+    .select('id, published, plan, updated_at')
     .eq('id', weekId)
-    .eq('published', true)
     .maybeSingle()
-  return data
-}
 
-/** All weekIds available in mock (dev only). Used to auto-jump to an upcoming published week. */
-export function listMockWeekIds() {
-  return USE_MOCK ? Object.keys(weeksMock).sort() : []
+  if (error || !data?.plan) return null
+  return {
+    ...data.plan,
+    id:        data.id,
+    published: data.published,
+    updatedAt: data.updated_at,
+  }
 }
 
 /**
- * Dashboard data loader.
- * Dev → local mock (src/mocks/dashboard.json).
- * Prod → Supabase. Widgets without a wired data source fall back to mock shape so the UI still renders.
+ * Save a week plan. Dev=localStorage draft, prod=Supabase upsert.
+ * Returns { ok, persisted } describing where it landed.
  */
+export async function saveWeek(weekId, plan) {
+  if (USE_MOCK) {
+    localStorage.setItem(LS_DRAFT_KEY(weekId), JSON.stringify(plan))
+    return { ok: true, persisted: 'local' }
+  }
+
+  const { error } = await supabase
+    .from('weeks')
+    .upsert(
+      { id: weekId, published: !!plan.published, plan },
+      { onConflict: 'id' }
+    )
+  if (error) throw error
+  return { ok: true, persisted: 'supabase' }
+}
+
+export async function deleteWeek(weekId) {
+  if (USE_MOCK) {
+    localStorage.removeItem(LS_DRAFT_KEY(weekId))
+    return
+  }
+  const { error } = await supabase.from('weeks').delete().eq('id', weekId)
+  if (error) throw error
+}
+
+/**
+ * List week ids the Schedule auto-bump can jump to. Dev=local+mock, prod=published in Supabase.
+ * Sync in dev (synchronous mock), async-only in prod — for now Schedule only uses this in dev.
+ */
+export function listMockWeekIds() {
+  if (!USE_MOCK) return []
+  const ids = []
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (key?.startsWith('btrt-week-draft-')) ids.push(key.replace('btrt-week-draft-', ''))
+    }
+  } catch { /* ignore */ }
+  return [...new Set([...ids, ...Object.keys(weeksMock)])].sort()
+}
+
+/* ── Dashboard ──────────────────────────────────────────────────────────── */
+
 export async function loadDashboard() {
   if (USE_MOCK) return dashboardMock
 
@@ -43,13 +98,13 @@ export async function loadDashboard() {
   const [{ data: members }, { data: payments }, { data: week }, { data: results }] = await Promise.all([
     supabase.from('members').select('id, name, status'),
     supabase.from('payments').select('amount, status, created_at').order('created_at', { ascending: false }).limit(20),
-    supabase.from('weeks').select('*, sessions(*)').eq('id', weekId).eq('published', true).maybeSingle(),
+    supabase.from('weeks').select('id, published, plan').eq('id', weekId).maybeSingle(),
     supabase.from('resultados').select('id, dorsal, tiempo_total, eventos(nombre, fecha, deporte, localidad)').order('id', { ascending: false }).limit(8),
   ])
 
-  const active     = (members ?? []).filter(m => m.status === 'active')
-  const sessions   = week?.sessions ?? []
-  const recentRows = (results ?? []).slice(0, 5).map(r => ({
+  const active        = (members ?? []).filter(m => m.status === 'active')
+  const activityCount = week?.plan?.activities?.length ?? 0
+  const recentRows    = (results ?? []).slice(0, 5).map(r => ({
     id:        r.id,
     title:     r.eventos?.nombre ?? 'Carrera',
     date:      r.eventos?.fecha,
@@ -62,9 +117,9 @@ export async function loadDashboard() {
 
   return {
     stats: {
-      activities:   { ...dashboardMock.stats.activities,   value: sessions.length      || dashboardMock.stats.activities.value   },
+      activities:   { ...dashboardMock.stats.activities,   value: activityCount  || dashboardMock.stats.activities.value   },
       kilometers:    dashboardMock.stats.kilometers,
-      participants: { ...dashboardMock.stats.participants, value: active.length        || dashboardMock.stats.participants.value },
+      participants: { ...dashboardMock.stats.participants, value: active.length  || dashboardMock.stats.participants.value },
       hours:         dashboardMock.stats.hours,
     },
     recent:       recentRows.length ? recentRows : dashboardMock.recent,

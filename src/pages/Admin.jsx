@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
+import PlanEditor from '../components/PlanEditor'
 
 import { isAdmin as checkAdmin } from '../lib/auth'
 const DAYS  = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo']
@@ -17,7 +18,7 @@ function getCurrentWeekId() {
 export default function Admin() {
   const { user } = useAuth()
   const isAdmin  = checkAdmin(user?.email)
-  const [activeTab, setActiveTab] = useState('week')
+  const [activeTab, setActiveTab] = useState('plan')
 
   if (!isAdmin) {
     return (
@@ -34,9 +35,10 @@ export default function Admin() {
   }
 
   const TABS = [
-    { id: 'week',    label: 'Semana',   icon: CalIcon  },
-    { id: 'members', label: 'Miembros', icon: TeamIcon },
-    { id: 'bot',     label: 'Bot WA',   icon: BotIcon  },
+    { id: 'plan',    label: 'Planificación', icon: PlanIcon },
+    { id: 'week',    label: 'Semana',        icon: CalIcon  },
+    { id: 'members', label: 'Miembros',      icon: TeamIcon },
+    { id: 'bot',     label: 'Bot WA',        icon: BotIcon  },
   ]
 
   return (
@@ -76,6 +78,7 @@ export default function Admin() {
       </div>
 
       {/* Content */}
+      {activeTab === 'plan'    && <PlanEditor />}
       {activeTab === 'week'    && <WeekTab />}
       {activeTab === 'members' && <MembersTab />}
       {activeTab === 'bot'     && <BotTab />}
@@ -274,6 +277,14 @@ function MembersTab() {
   const [payments,       setPayments]       = useState([])
   const [paymentsLoading, setPaymentsLoading] = useState(false)
 
+  // Invite / reset state
+  const [inviteOpen,  setInviteOpen]  = useState(false)
+  const [inviteEmail, setInviteEmail] = useState('')
+  const [inviteName,  setInviteName]  = useState('')
+  const [inviteBusy,  setInviteBusy]  = useState(false)
+  const [inviteMsg,   setInviteMsg]   = useState(null) // { ok: bool, text }
+  const [resetting,   setResetting]   = useState({})    // memberId -> 'ok' | 'err' | 'loading'
+
   useEffect(() => {
     supabase.from('members').select('*').order('name')
       .then(({ data }) => { setMembers(data ?? []); setLoading(false) })
@@ -282,6 +293,64 @@ function MembersTab() {
   async function updateStatus(id, status) {
     await supabase.from('members').update({ status }).eq('id', id)
     setMembers(prev => prev.map(m => m.id === id ? { ...m, status } : m))
+  }
+
+  /**
+   * Invite a new member via magic link.
+   * Supabase sends a one-click email. `shouldCreateUser: true` provisions
+   * an auth.users row on first click. Optionally pre-creates a `members` row.
+   */
+  async function inviteUser() {
+    if (!inviteEmail.trim()) return
+    setInviteBusy(true)
+    setInviteMsg(null)
+    try {
+      const email = inviteEmail.trim().toLowerCase()
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          shouldCreateUser: true,
+          emailRedirectTo: window.location.origin,
+        },
+      })
+      if (error) throw error
+
+      // Pre-create members row if we have a name and one doesn't exist yet.
+      if (inviteName.trim()) {
+        const exists = members.some(m => m.email?.toLowerCase() === email)
+        if (!exists) {
+          const { data } = await supabase
+            .from('members')
+            .insert({ name: inviteName.trim(), email, status: 'active' })
+            .select()
+            .single()
+          if (data) setMembers(prev => [...prev, data].sort((a,b) => (a.name||'').localeCompare(b.name||'')))
+        }
+      }
+
+      setInviteMsg({ ok: true, text: `Magic link enviado a ${email}` })
+      setInviteEmail('')
+      setInviteName('')
+    } catch (e) {
+      setInviteMsg({ ok: false, text: e.message ?? 'Error enviando invitación' })
+    } finally {
+      setInviteBusy(false)
+    }
+  }
+
+  /** Send password-reset email to the member. */
+  async function resetPassword(member) {
+    if (!member.email) {
+      setResetting(s => ({ ...s, [member.id]: 'noemail' }))
+      setTimeout(() => setResetting(s => ({ ...s, [member.id]: null })), 2500)
+      return
+    }
+    setResetting(s => ({ ...s, [member.id]: 'loading' }))
+    const { error } = await supabase.auth.resetPasswordForEmail(member.email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    })
+    setResetting(s => ({ ...s, [member.id]: error ? 'err' : 'ok' }))
+    setTimeout(() => setResetting(s => ({ ...s, [member.id]: null })), 2500)
   }
 
   async function saveWaId(id) {
@@ -413,6 +482,55 @@ function MembersTab() {
   return (
     <div className="flex flex-col gap-5">
 
+      {/* Invite form */}
+      <div className="bg-card border border-white/8 rounded-2xl p-4 flex flex-col gap-3">
+        <button
+          onClick={() => { setInviteOpen(o => !o); setInviteMsg(null) }}
+          className="flex items-center justify-between gap-2 text-left"
+        >
+          <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
+            <UserPlusIcon /> Invitar nuevo miembro
+          </span>
+          <span className="text-slate-500 text-xs">{inviteOpen ? '−' : '+'}</span>
+        </button>
+
+        {inviteOpen && (
+          <div className="flex flex-col gap-2">
+            <p className="text-slate-600 text-xs">
+              Mandá un magic link al email. El miembro entra con un click y luego puede setear contraseña. Si poneś nombre se crea su ficha aquí.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <input
+                type="email"
+                placeholder="email@bandurrias.com"
+                value={inviteEmail}
+                onChange={e => setInviteEmail(e.target.value)}
+                className="flex-1 bg-[#060810] text-white rounded-xl px-3 py-2.5 text-sm border border-white/8 placeholder-slate-600 focus:outline-none focus:border-brand/40"
+              />
+              <input
+                type="text"
+                placeholder="Nombre (opcional)"
+                value={inviteName}
+                onChange={e => setInviteName(e.target.value)}
+                className="flex-1 bg-[#060810] text-white rounded-xl px-3 py-2.5 text-sm border border-white/8 placeholder-slate-600 focus:outline-none focus:border-brand/40"
+              />
+              <button
+                onClick={inviteUser}
+                disabled={inviteBusy || !inviteEmail.trim()}
+                className="bg-brand text-black rounded-xl px-4 py-2.5 text-xs font-bold hover:bg-[#d4ff33] active:scale-95 transition-all disabled:opacity-50"
+              >
+                {inviteBusy ? 'Enviando…' : 'Enviar magic link'}
+              </button>
+            </div>
+            {inviteMsg && (
+              <p className={`text-xs font-semibold ${inviteMsg.ok ? 'text-brand' : 'text-red-400'}`}>
+                {inviteMsg.ok ? '✓' : '⚠'} {inviteMsg.text}
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* Summary cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
@@ -540,6 +658,25 @@ function MembersTab() {
                     <option value="inactive">Inactivo</option>
                   </select>
                 </div>
+
+                {/* Reset password */}
+                <button
+                  onClick={() => resetPassword(m)}
+                  disabled={resetting[m.id] === 'loading'}
+                  title={m.email ? `Enviar email de reset a ${m.email}` : 'Sin email asociado'}
+                  className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-semibold transition-all ${
+                    resetting[m.id] === 'ok'      ? 'bg-brand/15 text-brand border-brand/30' :
+                    resetting[m.id] === 'err'     ? 'bg-red-500/10 text-red-400 border-red-500/30' :
+                    resetting[m.id] === 'noemail' ? 'bg-slate-500/10 text-slate-400 border-slate-500/30' :
+                    'bg-white/4 border-white/5 text-slate-500 hover:text-blue-400 hover:border-blue-500/30 hover:bg-blue-500/5'
+                  }`}>
+                  <KeyIcon />
+                  {resetting[m.id] === 'loading'  ? '…' :
+                   resetting[m.id] === 'ok'       ? 'Enviado' :
+                   resetting[m.id] === 'err'      ? 'Error' :
+                   resetting[m.id] === 'noemail'  ? 'Sin email' :
+                   'Reset'}
+                </button>
 
                 {/* Ver pagos */}
                 <button
@@ -914,6 +1051,9 @@ function BotTab() {
 function CalIcon({ size = 16 }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
 }
+function PlanIcon({ size = 16 }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h4"/></svg>
+}
 function TeamIcon({ size = 16 }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
 }
@@ -925,6 +1065,12 @@ function TrashIcon() {
 }
 function LockIcon({ size = 16 }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+}
+function UserPlusIcon({ size = 13 }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+}
+function KeyIcon({ size = 13 }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/></svg>
 }
 function WaIcon({ size = 14 }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.124.558 4.121 1.528 5.845L.057 23.55a.5.5 0 0 0 .614.614l5.705-1.471A11.94 11.94 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.9 0-3.67-.51-5.19-1.4l-.37-.22-3.84.99.99-3.84-.22-.37A9.96 9.96 0 0 1 2 12c0-5.514 4.486-10 10-10s10 4.486 10 10-4.486 10-10 10z"/></svg>

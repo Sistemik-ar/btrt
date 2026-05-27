@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 import { loadDashboard } from '../lib/data'
-import { StatCard, LineChart, DateRangePill, Section, Card } from '../components/ui'
+import {
+  StatCard, LineChart, DateRangePill, Section, Card,
+  Donut, Leaderboard, ActivityRow,
+} from '../components/ui'
 import { Activity, MapPin, Users, Clock, ChevronDown } from 'lucide-react'
 
 export default function Stats() {
@@ -95,6 +98,30 @@ export default function Stats() {
             data={data.weekly[metric]}
             unit={metric === 'tiempo' ? 'h' : metric === 'participantes' ? '' : 'km'}
           />
+        </Card>
+      </Section>
+
+      {/* Distribución + Top Participantes */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-5">
+        <Section title="Distribución por Tipo" subtitle="Carreras del equipo por disciplina">
+          <Card className="p-6">
+            <Donut data={data.distribution} total={data.recent.length * 5} label="Total" />
+          </Card>
+        </Section>
+
+        <Section title="Top Participantes" subtitle="Corredores con más kilómetros">
+          <Card className="p-5">
+            <Leaderboard rows={data.leaderboard} unit="km" />
+          </Card>
+        </Section>
+      </div>
+
+      {/* Carreras Recientes */}
+      <Section title="Carreras Recientes" subtitle="Últimas competencias y entrenamientos">
+        <Card>
+          {data.recent.map((a, i) => (
+            <ActivityRow key={a.id} activity={a} first={i === 0} />
+          ))}
         </Card>
       </Section>
     </div>

@@ -1,10 +1,70 @@
 /**
  * Renders Roco's weekly training plan 1:1 with btrt/src/mocks/roco-plan.html.
- * Uses Barlow / Barlow Condensed fonts (loaded in index.css) and a scoped
- * style block so the visual matches the source HTML exactly without leaking
- * onto the rest of the app.
+ *
+ * Accepts either the legacy `cards[]` shape or the new activity-centric
+ * `activities[]` shape (with `days: ['lun','mar']` etc). Activities are
+ * converted to render-ready cards on the fly.
  */
-export default function RocoWeekPlan({ week }) {
+
+export const DAY_KEYS    = ['lun','mar','mie','jue','vie','sab','dom']
+export const DAY_NAME    = { lun:'Lunes', mar:'Martes', mie:'Miércoles', jue:'Jueves', vie:'Viernes', sab:'Sábado', dom:'Domingo' }
+export const DAY_ABBREV  = { lun:'Lun',   mar:'Mar',    mie:'Mié',       jue:'Jue',    vie:'Vie',     sab:'Sáb',    dom:'Dom'    }
+
+/* ── Activity → card converter ───────────────────────────────────────────── */
+
+export function composeDayLabel(activity) {
+  if (activity.dayLabel) return activity.dayLabel
+  const sortedDays = [...activity.days].sort((a, b) => DAY_KEYS.indexOf(a) - DAY_KEYS.indexOf(b))
+  return sortedDays.map(d => DAY_NAME[d]).join(' / ')
+}
+
+export function activityToCard(a) {
+  const sortedDays = [...a.days].sort((da, db) => DAY_KEYS.indexOf(da) - DAY_KEYS.indexOf(db))
+  const multiDay   = sortedDays.length > 1
+  const isSat      = sortedDays.length === 1 && sortedDays[0] === 'sab' && a.badge?.type !== 'rest'
+  const isRest     = a.rest || a.badge?.type === 'rest'
+
+  const turnos = (a.turnos ?? [])
+    .slice()
+    .sort((ta, tb) => DAY_KEYS.indexOf(ta.day) - DAY_KEYS.indexOf(tb.day))
+    .map(t => ({
+      text: multiDay
+        ? `${DAY_ABBREV[t.day] ?? ''} ${t.text ?? ''}`.trim()
+        : (t.text ?? ''),
+    }))
+
+  return {
+    id: a.id,
+    dayLabel: composeDayLabel(a),
+    badge: a.badge,
+    saturday: isSat,
+    rest: isRest,
+    turnos,
+    turnoNote: a.turnoNote,
+    turnoNoteColor: a.turnoNoteColor,
+    meetpoint: a.meetpoint && a.meetpoint.text ? a.meetpoint : null,
+    objective: a.objective,
+    structureLabel: a.structureLabel,
+    activities: (a.activities ?? []).filter(Boolean),
+    note: a.note,
+    niveles: a.niveles,
+    durationLabel: a.durationLabel,
+    restBody: a.restBody,
+  }
+}
+
+function normalizeWeek(week) {
+  if (!week) return null
+  if (Array.isArray(week.activities)) {
+    return { ...week, cards: week.activities.map(activityToCard) }
+  }
+  return week
+}
+
+/* ── Main component ──────────────────────────────────────────────────────── */
+
+export default function RocoWeekPlan({ week: rawWeek }) {
+  const week = normalizeWeek(rawWeek)
   if (!week?.cards?.length) return null
 
   return (
@@ -35,28 +95,6 @@ export default function RocoWeekPlan({ week }) {
       </div>
 
       <div className="rp-divider" />
-
-      {/* Attendance bar */}
-      {week.attendance && (
-        <div className="rp-attendance-bar">
-          <div>
-            <div className="rp-att-label">{week.attendance.label}</div>
-            {week.attendance.sub && <div className="rp-att-sub">{week.attendance.sub}</div>}
-          </div>
-          <div className="rp-att-buttons">
-            {week.attendance.okUrl && (
-              <a className="rp-att-btn rp-att-ok" href={week.attendance.okUrl} target="_blank" rel="noreferrer">
-                ✅ Confirmar turnos
-              </a>
-            )}
-            {week.attendance.modUrl && (
-              <a className="rp-att-btn rp-att-mod" href={week.attendance.modUrl} target="_blank" rel="noreferrer">
-                🔄 Modificar / Cancelar
-              </a>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Week grid */}
       <div className="rp-week-grid">
@@ -128,7 +166,7 @@ function DayCard({ card }) {
         {/* Meetpoint */}
         {!isRest && card.meetpoint && (
           <div className={`rp-meetpoint ${card.meetpoint.pending ? 'rp-pending' : ''}`}>
-            {card.meetpoint.icon ?? '📍'}{' '}
+            {card.meetpoint.icon ?? (card.meetpoint.pending ? '⚠️' : '📍')}{' '}
             {card.meetpoint.url
               ? <a href={card.meetpoint.url} target="_blank" rel="noreferrer">{card.meetpoint.text}</a>
               : card.meetpoint.text}
@@ -153,8 +191,8 @@ function DayCard({ card }) {
           </>
         )}
 
-        {/* Nota */}
-        {!isRest && card.note && (
+        {/* Nota / Observación */}
+        {!isRest && card.note && card.note.text && (
           <div className="rp-note">
             {card.note.strong && <strong>{card.note.strong}</strong>}
             {card.note.strong && ' '}
@@ -163,10 +201,10 @@ function DayCard({ card }) {
         )}
 
         {/* Por nivel */}
-        {!isRest && card.niveles?.length > 0 && (
+        {!isRest && card.niveles?.some(n => n.text) && (
           <>
             <div className="rp-sec">Por nivel</div>
-            {card.niveles.map((n, i) => (
+            {card.niveles.filter(n => n.text).map((n, i) => (
               <div key={i} className="rp-nrow">
                 <span className={`rp-ntag rp-${n.type}`}>{n.type.toUpperCase()}</span>
                 <span className="rp-ndesc">{n.text}</span>
