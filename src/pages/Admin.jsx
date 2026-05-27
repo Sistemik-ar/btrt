@@ -96,7 +96,7 @@ function WeekTab() {
 
   async function loadSessions() {
     const [{ data: week }, { data }] = await Promise.all([
-      supabase.from('weeks').select('published').eq('id', weekId).single(),
+      supabase.from('weeks').select('published').eq('id', weekId).maybeSingle(),
       supabase.from('sessions').select('*, attendance(count)').eq('week_id', weekId),
     ])
     setPublished(week?.published ?? false)

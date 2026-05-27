@@ -20,7 +20,7 @@ export default function Home() {
     const weekId = monday.toISOString().split('T')[0]
     const { data } = await supabase
       .from('weeks').select('*, sessions(*)')
-      .eq('id', weekId).eq('published', true).single()
+      .eq('id', weekId).eq('published', true).maybeSingle()
     setCurrentWeek(data)
     setLoading(false)
   }
@@ -31,7 +31,7 @@ export default function Home() {
     (a, b) => DAY_ORDER.indexOf(a.day) - DAY_ORDER.indexOf(b.day)
   )[0]
 
-  const payLabel =
+  const payStatus =
     profile?.status === 'active' ? 'Al día' :
     profile?.status === 'moroso' ? 'Pendiente' : '—'
 
@@ -43,64 +43,59 @@ export default function Home() {
     ? new Date(profile.last_payment).toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })
     : null
 
-  return (
-    <div className="flex flex-col gap-8">
+  const today = new Date()
+  const dateLabel = today.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 
-      {/* ── Page title (estilo Argon) ── */}
-      <div className="flex items-start justify-between gap-4 border-b border-white/5 pb-6">
+  return (
+    <div className="flex flex-col gap-8 max-w-5xl">
+
+      {/* ── Page header ── */}
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-slate-500 text-xs uppercase tracking-widest font-semibold mb-1.5">
-            {new Date().toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}
-          </p>
-          <h1 className="text-3xl font-black text-white tracking-tight uppercase">Inicio</h1>
-          <p className="text-slate-500 text-sm mt-1">Bienvenido, {firstName} — Bandurrias Trail Running Team</p>
+          <h1 className="text-3xl font-black text-white tracking-tight">Inicio</h1>
+          <p className="text-slate-500 text-sm mt-1 capitalize">{dateLabel}</p>
         </div>
-        <div className="hidden sm:flex items-center gap-2 shrink-0 bg-[#AADD00]/10 border border-[#AADD00]/20 px-3.5 py-2 rounded-xl mt-1">
-          <span className="w-2 h-2 rounded-full bg-[#AADD00]" />
-          <span className="text-[#AADD00] text-xs font-bold uppercase tracking-widest">Período Base</span>
-        </div>
+        <Link
+          to="/buscar"
+          className="hidden sm:flex items-center gap-2 bg-[#AADD00] text-black font-bold text-sm px-5 py-2.5 rounded-xl hover:bg-[#c4f01a] active:scale-95 transition-all shrink-0 mt-1"
+        >
+          <SearchIcon /> Ver resultados
+        </Link>
       </div>
 
-      {/* ── Stats row (3 cards) ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+      {/* ── Stat cards ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
 
-        {/* Estado de pago */}
-        <StatCard
-          icon={<CardIcon />}
-          iconAccent={payAccent}
+        <DashCard
           label="Estado de pago"
-          value={payLabel}
-          valueAccent={payAccent}
-          sub={lastPayment ? `Último pago: ${lastPayment}` : 'Sin registro de pago'}
+          value={payStatus}
+          sub={lastPayment ? `Último: ${lastPayment}` : 'Sin registro'}
+          accent={payAccent}
+          icon={<CardIcon />}
+          spark={[30, 45, 35, 50, 40, 55, 45]}
         />
 
-        {/* Sesiones esta semana */}
-        <StatCard
-          icon={<CalIcon />}
-          iconAccent="brand"
+        <DashCard
           label="Sesiones esta semana"
           value={loading ? '—' : String(sessionCount)}
-          valueAccent="brand"
-          valueLarge
-          sub={
-            nextSession
-              ? `Próxima: ${nextSession.day}`
-              : loading ? '' : 'Sin sesiones publicadas'
-          }
+          sub={nextSession ? `Próxima: ${nextSession.day}` : 'Sin sesiones aún'}
+          accent="brand"
+          icon={<CalIcon />}
+          spark={[20, 40, 30, 60, 45, 70, 55]}
         />
 
-        {/* Resultados */}
         <Link to="/buscar" className="block">
-          <StatCard
-            icon={<TrophyIcon />}
-            iconAccent="brand"
+          <DashCard
             label="Mis resultados"
-            value="Ver historial"
-            valueAccent="white"
+            value="Explorar"
             sub="Cronometraje Instantáneo"
+            accent="brand"
+            icon={<TrophyIcon />}
+            spark={[15, 35, 25, 45, 55, 50, 65]}
             cta
           />
         </Link>
+
       </div>
 
       {/* ── Planificación semanal ── */}
@@ -108,15 +103,15 @@ export default function Home() {
         <div className="flex items-center justify-between mb-5">
           <div>
             <h2 className="text-lg font-bold text-white">Planificación semanal</h2>
-            <p className="text-slate-600 text-xs mt-0.5">
+            <p className="text-slate-500 text-sm mt-0.5">
               {currentWeek
                 ? 'Confirmá tu asistencia en cada sesión'
                 : 'Roco publica el programa los domingos'}
             </p>
           </div>
           {currentWeek && (
-            <span className="flex items-center gap-1.5 text-[#AADD00] text-xs font-bold bg-[#AADD00]/10 border border-[#AADD00]/20 px-3 py-1.5 rounded-full">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#AADD00]" />
+            <span className="flex items-center gap-1.5 text-[#AADD00] text-xs font-bold bg-[#AADD00]/10 border border-[#AADD00]/20 px-3 py-1.5 rounded-full whitespace-nowrap">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#AADD00] animate-pulse" />
               Publicada
             </span>
           )}
@@ -129,13 +124,13 @@ export default function Home() {
         ) : currentWeek ? (
           <WeekSchedule week={currentWeek} />
         ) : (
-          <div className="bg-[#13131F] border border-white/5 rounded-2xl flex flex-col items-center justify-center py-16 text-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-[#AADD00]/[0.07] border border-[#AADD00]/10 flex items-center justify-center text-[#AADD00]/30">
-              <CalIcon size={24} />
+          <div className="bg-[#0D1117] border border-white/[0.06] rounded-2xl flex flex-col items-center justify-center py-16 text-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-[#AADD00]/[0.07] border border-[#AADD00]/10 flex items-center justify-center">
+              <CalIcon size={24} className="text-[#AADD00]/40" />
             </div>
             <div>
               <p className="text-white font-semibold">Sin planificación esta semana</p>
-              <p className="text-slate-600 text-sm mt-1.5">Roco publicará el programa el domingo.</p>
+              <p className="text-slate-500 text-sm mt-1">Roco publicará el programa el domingo.</p>
             </div>
           </div>
         )}
@@ -144,54 +139,85 @@ export default function Home() {
   )
 }
 
-/* ── Stat Card ── */
+/* ── Dashboard card ── */
 const ACCENT = {
-  brand:   { iconBg: 'bg-[#AADD00]/15',      iconText: 'text-[#AADD00]',   val: 'text-[#AADD00]'   },
-  emerald: { iconBg: 'bg-emerald-500/15',    iconText: 'text-emerald-400', val: 'text-emerald-400' },
-  yellow:  { iconBg: 'bg-yellow-400/15',     iconText: 'text-yellow-400',  val: 'text-yellow-400'  },
-  slate:   { iconBg: 'bg-slate-500/15',      iconText: 'text-slate-400',   val: 'text-slate-400'   },
-  white:   { iconBg: 'bg-[#AADD00]/15',      iconText: 'text-[#AADD00]',   val: 'text-white'       },
+  brand:   { icon: 'bg-[#AADD00]/15 text-[#AADD00]',    val: 'text-[#AADD00]',    spark: '#AADD00' },
+  emerald: { icon: 'bg-emerald-500/15 text-emerald-400', val: 'text-emerald-400',  spark: '#34d399' },
+  yellow:  { icon: 'bg-yellow-400/15 text-yellow-400',   val: 'text-yellow-400',   spark: '#facc15' },
+  slate:   { icon: 'bg-slate-500/15 text-slate-400',     val: 'text-slate-300',    spark: '#94a3b8' },
 }
 
-function StatCard({ icon, iconAccent, label, value, valueAccent, sub, cta, valueLarge }) {
-  const ia = ACCENT[iconAccent]  ?? ACCENT.brand
-  const va = ACCENT[valueAccent] ?? ACCENT.brand
+function DashCard({ label, value, sub, accent = 'brand', icon, spark = [], cta }) {
+  const a = ACCENT[accent] ?? ACCENT.brand
+
+  // Normalize spark to 0-100 range
+  const min = Math.min(...spark)
+  const max = Math.max(...spark)
+  const norm = spark.map(v => max === min ? 50 : ((v - min) / (max - min)) * 60 + 10)
+  const w = 80, h = 40
+  const step = w / (norm.length - 1)
+  const pts  = norm.map((v, i) => `${i * step},${h - v * (h / 100)}`).join(' ')
 
   return (
-    <div className={`bg-[#13131F] border border-white/5 rounded-2xl p-6 flex flex-col gap-5 h-full
-      ${cta ? 'hover:border-[#AADD00]/25 hover:bg-[#161624] transition-all cursor-pointer group' : ''}`}>
-      {/* Icon + label row */}
-      <div className="flex items-center gap-3">
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${ia.iconBg} ${ia.iconText}`}>
+    <div className={`bg-[#0D1117] border border-white/[0.06] rounded-2xl p-5 flex flex-col gap-4 h-full
+      ${cta ? 'hover:border-[#AADD00]/20 hover:bg-[#111827] transition-all cursor-pointer group' : ''}`}>
+
+      {/* Top row: label + icon */}
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest leading-snug">{label}</p>
+        <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${a.icon}`}>
           {icon}
         </div>
-        <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest leading-tight">{label}</p>
       </div>
 
       {/* Value */}
-      <div className="flex-1">
-        <p className={`font-black tracking-tight leading-none ${va.val} ${valueLarge ? 'text-5xl' : 'text-2xl'}`}>
-          {value}
-        </p>
-        {sub && <p className="text-slate-600 text-xs mt-2">{sub}</p>}
+      <div>
+        <p className={`text-4xl font-black tracking-tight leading-none ${a.val}`}>{value}</p>
+        {sub && <p className="text-slate-500 text-xs mt-2 leading-snug">{sub}</p>}
       </div>
 
-      {/* CTA arrow */}
-      {cta && (
-        <p className="text-[#AADD00] text-xs font-bold group-hover:translate-x-1 transition-transform">
-          Explorar carreras →
-        </p>
-      )}
+      {/* Sparkline */}
+      <div className="mt-auto">
+        <svg width="100%" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="h-8 opacity-60">
+          <defs>
+            <linearGradient id={`sg-${label}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={a.spark} stopOpacity="0.3"/>
+              <stop offset="100%" stopColor={a.spark} stopOpacity="0"/>
+            </linearGradient>
+          </defs>
+          <polyline
+            points={pts}
+            fill="none"
+            stroke={a.spark}
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <polygon
+            points={`0,${h} ${pts} ${w},${h}`}
+            fill={`url(#sg-${label})`}
+          />
+        </svg>
+        {cta && (
+          <p className={`text-xs font-bold mt-1 group-hover:translate-x-1 transition-transform ${a.val}`}>
+            Ver historial →
+          </p>
+        )}
+      </div>
     </div>
   )
 }
 
+/* ── Icons ── */
 function CardIcon() {
-  return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+  return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
 }
-function CalIcon({ size = 18 }) {
-  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+function CalIcon({ size = 16, className = '' }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
 }
 function TrophyIcon() {
-  return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4a2 2 0 0 1-2-2V5h4"/><path d="M18 9h2a2 2 0 0 0 2-2V5h-4"/><path d="M12 17v4"/><path d="M8 21h8"/><path d="M6 5h12v6a6 6 0 0 1-12 0V5z"/></svg>
+  return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4a2 2 0 0 1-2-2V5h4"/><path d="M18 9h2a2 2 0 0 0 2-2V5h-4"/><path d="M12 17v4"/><path d="M8 21h8"/><path d="M6 5h12v6a6 6 0 0 1-12 0V5z"/></svg>
+}
+function SearchIcon() {
+  return <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
 }
