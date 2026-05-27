@@ -2,9 +2,7 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 
-const ADMIN_EMAILS = new Set(
-  (import.meta.env.VITE_ADMIN_EMAIL ?? '').split(',').map(e => e.trim()).filter(Boolean)
-)
+import { isAdmin as checkAdmin } from '../lib/auth'
 const DAYS  = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo']
 const TIMES = ['6:00','7:00','8:00','9:00','10:00','16:00','17:00','18:00','19:00','20:00']
 
@@ -18,7 +16,7 @@ function getCurrentWeekId() {
 /* ── Main page ─────────────────────────────────────────────────── */
 export default function Admin() {
   const { user } = useAuth()
-  const isAdmin  = ADMIN_EMAILS.has(user?.email)
+  const isAdmin  = checkAdmin(user?.email)
   const [activeTab, setActiveTab] = useState('week')
 
   if (!isAdmin) {
@@ -266,12 +264,16 @@ function WeekTab() {
 
 /* ─────────────────────────── MIEMBROS ─────────────────────────── */
 function MembersTab() {
-  const [members,    setMembers]   = useState([])
-  const [filter,     setFilter]    = useState('all')
-  const [editingWa,  setEditingWa] = useState(null) // member id being edited
-  const [waInput,    setWaInput]   = useState('')
-  const [waError,    setWaError]   = useState(null)
-  const [loading,    setLoading]   = useState(true)
+  const [members,        setMembers]        = useState([])
+  const [filter,         setFilter]         = useState('all')
+  const [search,         setSearch]         = useState('')
+  const [editingWa,      setEditingWa]      = useState(null)
+  const [waInput,        setWaInput]        = useState('')
+  const [waError,        setWaError]        = useState(null)
+  const [loading,        setLoading]        = useState(true)
+  const [selectedMember, setSelectedMember] = useState(null)
+  const [payments,       setPayments]       = useState([])
+  const [paymentsLoading, setPaymentsLoading] = useState(false)
 
   useEffect(() => {
     supabase.from('members').select('*').order('name')
@@ -287,13 +289,22 @@ function MembersTab() {
     setWaError(null)
     const cleaned = waInput.replace(/\D/g, '')
     const { error } = await supabase.from('members').update({ wa_id: cleaned || null }).eq('id', id)
-    if (error) {
-      setWaError(error.message)
-      return
-    }
+    if (error) { setWaError(error.message); return }
     setMembers(prev => prev.map(m => m.id === id ? { ...m, wa_id: cleaned || null } : m))
     setEditingWa(null)
     setWaInput('')
+  }
+
+  async function viewPayments(member) {
+    setSelectedMember(member)
+    setPaymentsLoading(true)
+    const { data } = await supabase
+      .from('payments')
+      .select('*')
+      .eq('member_id', member.id)
+      .order('created_at', { ascending: false })
+    setPayments(data ?? [])
+    setPaymentsLoading(false)
   }
 
   const counts = {
@@ -304,25 +315,112 @@ function MembersTab() {
   }
   const withWa = members.filter(m => m.wa_id).length
 
-  const filtered = filter === 'all' ? members : members.filter(m => m.status === filter)
+  const byStatus  = filter === 'all' ? members : members.filter(m => m.status === filter)
+  const filtered  = search.trim()
+    ? byStatus.filter(m => m.name?.toLowerCase().includes(search.trim().toLowerCase()))
+    : byStatus
 
   const STATUS_FILTERS = [
-    { id: 'all',      label: 'Todos',     count: counts.all      },
-    { id: 'active',   label: 'Al día',    count: counts.active   },
-    { id: 'moroso',   label: 'Moroso',    count: counts.moroso   },
-    { id: 'inactive', label: 'Inactivo',  count: counts.inactive },
+    { id: 'all',      label: 'Todos',    count: counts.all      },
+    { id: 'active',   label: 'Al día',   count: counts.active   },
+    { id: 'moroso',   label: 'Moroso',   count: counts.moroso   },
+    { id: 'inactive', label: 'Inactivo', count: counts.inactive },
   ]
 
+  // ── Payment history view ──
+  if (selectedMember) {
+    const approved = payments.filter(p => p.status === 'approved')
+    const pending  = payments.filter(p => p.status === 'pending')
+    const total    = approved.reduce((s, p) => s + (p.amount ?? 0), 0)
+
+    const statusCfg = {
+      approved: { label: 'Aprobado',  color: 'text-[#C6FF00]',   bg: 'bg-[#C6FF00]/10 border-[#C6FF00]/20'   },
+      pending:  { label: 'Pendiente', color: 'text-yellow-400',  bg: 'bg-yellow-400/10 border-yellow-400/20' },
+      rejected: { label: 'Rechazado', color: 'text-red-400',     bg: 'bg-red-500/10 border-red-500/20'       },
+    }
+
+    return (
+      <div className="flex flex-col gap-5">
+        {/* Back + header */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => { setSelectedMember(null); setPayments([]) }}
+            className="w-9 h-9 rounded-xl bg-white/5 border border-white/[0.1] flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-all shrink-0">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+          </button>
+          <div className="flex-1 min-w-0">
+            <p className="text-white font-bold truncate">{selectedMember.name}</p>
+            <p className="text-slate-500 text-xs">Historial de pagos</p>
+          </div>
+        </div>
+
+        {/* Summary */}
+        <div className="grid grid-cols-3 gap-3">
+          {[
+            { label: 'Total pagado',  value: `$${total.toLocaleString('es-AR')}`, color: 'text-[#C6FF00]'  },
+            { label: 'Aprobados',     value: approved.length,                     color: 'text-white'       },
+            { label: 'Pendientes',    value: pending.length,                      color: pending.length ? 'text-yellow-400' : 'text-slate-500' },
+          ].map(({ label, value, color }) => (
+            <div key={label} className="bg-[#0C1020] border border-white/[0.1] rounded-2xl p-4">
+              <p className={`text-2xl font-black ${color}`}>{value}</p>
+              <p className="text-slate-500 text-xs mt-1">{label}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Payment list */}
+        {paymentsLoading ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="w-5 h-5 border-2 border-[#C6FF00]/20 border-t-[#C6FF00] rounded-full animate-spin" />
+          </div>
+        ) : payments.length === 0 ? (
+          <div className="bg-[#0C1020] border border-white/[0.1] rounded-2xl p-12 text-center">
+            <p className="text-slate-500 text-sm">Sin pagos registrados.</p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {payments.map(p => {
+              const cfg = statusCfg[p.status] ?? { label: p.status, color: 'text-slate-400', bg: 'bg-white/5 border-white/10' }
+              const date = new Date(p.created_at).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })
+              return (
+                <div key={p.id} className="bg-[#0C1020] border border-white/[0.1] rounded-2xl p-4 flex items-center gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-white font-bold text-lg">
+                        {p.amount != null ? `$${p.amount.toLocaleString('es-AR')}` : '—'}
+                      </p>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${cfg.bg} ${cfg.color}`}>
+                        {cfg.label}
+                      </span>
+                    </div>
+                    <p className="text-slate-500 text-xs mt-0.5">{date}</p>
+                    {p.proof_text && p.proof_text !== '(comprobante adjunto)' && (
+                      <p className="text-slate-600 text-[11px] mt-1 italic line-clamp-1">"{p.proof_text}"</p>
+                    )}
+                  </div>
+                  {p.approved_by && (
+                    <p className="text-slate-700 text-[10px] shrink-0">por {p.approved_by.split(' ')[0]}</p>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // ── Member list view ──
   return (
     <div className="flex flex-col gap-5">
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { label: 'Total',           value: counts.all,    color: 'text-white'       },
-          { label: 'Al día',          value: counts.active, color: 'text-[#C6FF00]'   },
-          { label: 'Morosos',         value: counts.moroso, color: 'text-yellow-400'  },
-          { label: 'WA vinculado',    value: `${withWa}/${counts.all}`, color: withWa === counts.all ? 'text-[#C6FF00]' : 'text-slate-400' },
+          { label: 'Total',        value: counts.all,    color: 'text-white'       },
+          { label: 'Al día',       value: counts.active, color: 'text-[#C6FF00]'   },
+          { label: 'Morosos',      value: counts.moroso, color: 'text-yellow-400'  },
+          { label: 'WA vinculado', value: `${withWa}/${counts.all}`, color: withWa === counts.all ? 'text-[#C6FF00]' : 'text-slate-400' },
         ].map(({ label, value, color }) => (
           <div key={label} className="bg-[#0C1020] border border-white/[0.1] rounded-2xl p-5">
             <p className={`text-3xl font-black ${color}`}>{value}</p>
@@ -331,21 +429,36 @@ function MembersTab() {
         ))}
       </div>
 
-      {/* Filter pills */}
-      <div className="flex gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none]">
-        {STATUS_FILTERS.map(({ id, label, count }) => (
-          <button key={id} onClick={() => setFilter(id)}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap shrink-0 transition-all ${
-              filter === id
-                ? 'bg-[#C6FF00]/15 text-[#C6FF00] border border-[#C6FF00]/30'
-                : 'bg-white/[0.04] text-slate-500 border border-white/5 hover:text-slate-300'
-            }`}>
-            {label}
-            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${filter === id ? 'bg-[#C6FF00]/20' : 'bg-white/5'}`}>
-              {count}
-            </span>
-          </button>
-        ))}
+      {/* Search + filter row */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex items-center gap-2 flex-1 bg-[#0C1020] border border-white/[0.1] rounded-xl px-3 focus-within:border-[#C6FF00]/40 transition-all">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-600 shrink-0"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Buscar por nombre..."
+            className="flex-1 bg-transparent text-white py-3 text-sm placeholder-slate-600 focus:outline-none"
+          />
+          {search && (
+            <button onClick={() => setSearch('')} className="text-slate-600 hover:text-slate-400 transition-colors shrink-0 text-xs">✕</button>
+          )}
+        </div>
+
+        <div className="flex gap-2 overflow-x-auto [scrollbar-width:none]">
+          {STATUS_FILTERS.map(({ id, label, count }) => (
+            <button key={id} onClick={() => setFilter(id)}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap shrink-0 transition-all ${
+                filter === id
+                  ? 'bg-[#C6FF00]/15 text-[#C6FF00] border border-[#C6FF00]/30'
+                  : 'bg-white/[0.04] text-slate-500 border border-white/5 hover:text-slate-300'
+              }`}>
+              {label}
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${filter === id ? 'bg-[#C6FF00]/20' : 'bg-white/5'}`}>
+                {count}
+              </span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Member list */}
@@ -377,9 +490,7 @@ function MembersTab() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-white font-semibold text-sm truncate">{m.name}</p>
-                    <p className="text-slate-600 text-[11px] truncate">
-                      {m.email}
-                    </p>
+                    <p className="text-slate-600 text-[11px] truncate">{m.email}</p>
                     <div className="flex items-center gap-3 mt-0.5">
                       {lastPay && <span className="text-slate-600 text-[10px]">Último pago: {lastPay}</span>}
                       <span className={`text-[10px] font-semibold ${statusCfg.color}`}>{statusCfg.label}</span>
@@ -388,7 +499,7 @@ function MembersTab() {
                 </div>
 
                 {/* WA ID */}
-                <div className="flex flex-col gap-1 sm:w-56 shrink-0">
+                <div className="flex flex-col gap-1 sm:w-48 shrink-0">
                   {editingWa === m.id ? (
                     <>
                       <div className="flex items-center gap-2">
@@ -401,17 +512,11 @@ function MembersTab() {
                           className="flex-1 min-w-0 bg-[#060810] text-white rounded-xl px-3 py-2 text-xs border border-[#C6FF00]/40 focus:outline-none"
                         />
                         <button onClick={() => saveWaId(m.id)}
-                          className="w-8 h-8 rounded-xl bg-[#C6FF00]/15 text-[#C6FF00] flex items-center justify-center text-xs font-bold hover:bg-[#C6FF00]/25 transition-all shrink-0">
-                          ✓
-                        </button>
+                          className="w-8 h-8 rounded-xl bg-[#C6FF00]/15 text-[#C6FF00] flex items-center justify-center text-xs font-bold hover:bg-[#C6FF00]/25 transition-all shrink-0">✓</button>
                         <button onClick={() => { setEditingWa(null); setWaError(null) }}
-                          className="w-8 h-8 rounded-xl bg-white/5 text-slate-500 flex items-center justify-center text-xs hover:bg-white/10 transition-all shrink-0">
-                          ✕
-                        </button>
+                          className="w-8 h-8 rounded-xl bg-white/5 text-slate-500 flex items-center justify-center text-xs hover:bg-white/10 transition-all shrink-0">✕</button>
                       </div>
-                      {waError && (
-                        <p className="text-red-400 text-[10px] leading-tight px-1">{waError}</p>
-                      )}
+                      {waError && <p className="text-red-400 text-[10px] leading-tight px-1">{waError}</p>}
                     </>
                   ) : (
                     <button
@@ -436,13 +541,24 @@ function MembersTab() {
                     <option value="inactive">Inactivo</option>
                   </select>
                 </div>
+
+                {/* Ver pagos */}
+                <button
+                  onClick={() => viewPayments(m)}
+                  title="Ver historial de pagos"
+                  className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/[0.04] border border-white/5 text-slate-500 hover:text-[#C6FF00] hover:border-[#C6FF00]/30 hover:bg-[#C6FF00]/5 transition-all text-xs font-semibold">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+                  Pagos
+                </button>
               </div>
             )
           })}
 
           {filtered.length === 0 && !loading && (
             <div className="bg-[#0C1020] border border-white/[0.1] rounded-2xl p-12 text-center">
-              <p className="text-slate-500 text-sm">Sin miembros en esta categoría.</p>
+              <p className="text-slate-500 text-sm">
+                {search ? `Sin resultados para "${search}".` : 'Sin miembros en esta categoría.'}
+              </p>
             </div>
           )}
         </div>

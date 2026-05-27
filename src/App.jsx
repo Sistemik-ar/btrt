@@ -5,12 +5,9 @@ import Layout from './components/Layout'
 import Login from './pages/Login'
 import Home from './pages/Home'
 import Admin from './pages/Admin'
+import { isAdmin as checkAdmin } from './lib/auth'
 
 const Search = lazy(() => import('./pages/Search'))
-
-const ADMIN_EMAILS = new Set(
-  (import.meta.env.VITE_ADMIN_EMAIL ?? '').split(',').map(e => e.trim()).filter(Boolean)
-)
 
 function AppRoutes() {
   const { user } = useAuth()
@@ -25,7 +22,7 @@ function AppRoutes() {
 
   if (!user) return <Login />
 
-  const isAdmin = ADMIN_EMAILS.has(user.email)
+  const isAdmin = checkAdmin(user.email)
   return (
     <Layout>
       <Routes>
