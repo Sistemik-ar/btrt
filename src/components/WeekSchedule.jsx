@@ -223,21 +223,23 @@ function RichCard({ session, rich, confirmed, loading, onToggle }) {
 /* ── Simple card (plain text description) ─────────────────────────────────── */
 function SimpleCard({ session, confirmed, loading, onToggle }) {
   return (
-    <div className={`rounded-2xl p-4 flex items-center gap-4 border transition-all shadow-sm shadow-black/30 ${
+    <div className={`rounded-2xl p-4 flex items-start gap-4 border transition-all shadow-sm shadow-black/30 ${
       confirmed ? 'border-[#C6FF00]/35 bg-[#0E1A08]' : 'border-white/[0.1] bg-[#0A0E1C] hover:border-white/[0.16]'
     }`}>
-      <div className={`shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold ${
+      <div className={`shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold mt-0.5 ${
         confirmed ? 'bg-[#C6FF00]/15 text-[#C6FF00]' : 'bg-white/5 text-slate-400'
       }`}>{session.time}</div>
       <div className="flex-1 min-w-0">
-        {session.location && <p className="text-slate-500 text-xs truncate mb-0.5">📍 {session.location}</p>}
-        {session.description && <p className="text-slate-300 text-sm leading-snug">{session.description}</p>}
+        {session.location && <p className="text-slate-500 text-xs truncate mb-1">📍 {session.location}</p>}
+        {session.description && (
+          <p className="text-slate-300 text-sm leading-snug line-clamp-3">{session.description}</p>
+        )}
       </div>
       <button onClick={onToggle} disabled={loading}
-        className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-90 disabled:opacity-40 ${
+        className={`shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-90 disabled:opacity-40 mt-0.5 ${
           confirmed ? 'bg-[#C6FF00] text-black' : 'bg-white/5 text-slate-500 hover:bg-white/10'
         }`}>
-        {confirmed ? <Check size={16} /> : <Plus size={16} />}
+        {confirmed ? <Check size={15} /> : <Plus size={15} />}
       </button>
     </div>
   )

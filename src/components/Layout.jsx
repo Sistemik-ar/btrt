@@ -164,7 +164,7 @@ export default function Layout({ children }) {
         </header>
 
         {/* Page */}
-        <main className="flex-1 p-5 lg:p-8 pb-40 lg:pb-12">
+        <main className="flex-1 px-5 pt-5 pb-44 lg:px-8 lg:pt-8 lg:pb-12">
           {children}
         </main>
       </div>
