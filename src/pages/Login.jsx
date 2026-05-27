@@ -7,16 +7,42 @@ export default function Login() {
   const [email,    setEmail]    = useState('')
   const [password, setPassword] = useState('')
   const [error,    setError]    = useState('')
+  const [info,     setInfo]     = useState('')
   const [loading,  setLoading]  = useState(false)
   const [mode,     setMode]     = useState('google') // 'google' | 'email'
 
   async function handleEmailLogin(e) {
     e.preventDefault()
     setLoading(true)
-    setError('')
+    setError(''); setInfo('')
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) setError(error.message)
     setLoading(false)
+  }
+
+  async function handleMagicLink() {
+    setError(''); setInfo('')
+    if (!email.trim()) { setError('Ingresá tu email primero'); return }
+    setLoading(true)
+    const { error } = await supabase.auth.signInWithOtp({
+      email: email.trim(),
+      options: { shouldCreateUser: false, emailRedirectTo: window.location.origin },
+    })
+    setLoading(false)
+    if (error) setError(error.message)
+    else setInfo(`Te enviamos un magic link a ${email.trim()}. Revisá tu casilla.`)
+  }
+
+  async function handleForgotPassword() {
+    setError(''); setInfo('')
+    if (!email.trim()) { setError('Ingresá tu email primero'); return }
+    setLoading(true)
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}/reset-password`,
+    })
+    setLoading(false)
+    if (error) setError(error.message)
+    else setInfo(`Te enviamos un email de reset a ${email.trim()}.`)
   }
 
   return (
@@ -106,10 +132,26 @@ export default function Login() {
                 {error === 'Invalid login credentials' ? 'Email o contraseña incorrectos' : error}
               </p>
             )}
+            {info && (
+              <p className="text-brand text-xs text-center bg-brand/10 border border-brand/20 rounded-xl px-3 py-2">
+                ✓ {info}
+              </p>
+            )}
             <button type="submit" disabled={loading}
               className="bg-brand text-black font-bold py-3 rounded-2xl text-sm active:scale-95 transition-all disabled:opacity-50 hover:bg-[#c4f01a]">
               {loading ? 'Ingresando...' : 'Ingresar'}
             </button>
+
+            <div className="flex items-center justify-between gap-3 text-[11px] pt-1">
+              <button type="button" onClick={handleMagicLink} disabled={loading}
+                className="text-slate-400 hover:text-brand transition-colors disabled:opacity-50">
+                Enviar magic link
+              </button>
+              <button type="button" onClick={handleForgotPassword} disabled={loading}
+                className="text-slate-400 hover:text-brand transition-colors disabled:opacity-50">
+                ¿Olvidaste tu contraseña?
+              </button>
+            </div>
           </form>
         )}
 

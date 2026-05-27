@@ -5,7 +5,7 @@ import { loadWeek } from '../lib/data'
 import { loadMyAttendance, loadAttendanceCounts, toggleAttendance, turnoKey } from '../lib/attendance'
 import { Section, Card } from '../components/ui'
 import { activityToCard, DAY_NAME, DAY_ABBREV } from '../components/RocoWeekPlan'
-import { ArrowRight, Calendar, Check, Clock, Users } from 'lucide-react'
+import { ArrowRight, Calendar, Check, Clock, Users, Key, X } from 'lucide-react'
 
 /**
  * Returns the weekId to display on the home dashboard.
@@ -29,12 +29,18 @@ const BADGE_STYLE = {
   rest:    { bg: 'bg-white/5',       text: 'text-slate-500'  },
 }
 
+function hasSetPassword() {
+  try { return localStorage.getItem('btrt-password-set') === '1' }
+  catch { return true }
+}
+
 export default function Home() {
   const { user, profile } = useAuth()
   const [week, setWeek]               = useState(null)
   const [loading, setLoading]         = useState(true)
   const [myKeys, setMyKeys]           = useState(() => new Set())
   const [counts, setCounts]           = useState({})
+  const [showPwBanner, setShowPwBanner] = useState(() => !hasSetPassword())
   const weekId = getDisplayWeekId()
   const isSunday = new Date().getDay() === 0
 
@@ -52,6 +58,11 @@ export default function Home() {
       setLoading(false)
     })()
   }, [weekId, user?.id])
+
+  function dismissPwBanner() {
+    try { localStorage.setItem('btrt-password-set', '1') } catch {}
+    setShowPwBanner(false)
+  }
 
   async function handleToggle(day, text) {
     const wasOn = myKeys.has(turnoKey(day, text))
@@ -87,6 +98,31 @@ export default function Home() {
           </p>
         )}
       </header>
+
+      {showPwBanner && user && (
+        <div className="bg-card border border-brand/30 rounded-2xl px-4 py-3 flex items-center gap-3 flex-wrap">
+          <div className="w-8 h-8 rounded-lg bg-brand/15 border border-brand/30 flex items-center justify-center shrink-0">
+            <Key size={14} className="text-brand" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-white text-sm font-semibold">Creá una contraseña para tu cuenta</p>
+            <p className="text-slate-500 text-xs mt-0.5">Así podés entrar la próxima vez sin esperar el magic link.</p>
+          </div>
+          <Link
+            to="/reset-password"
+            className="bg-brand text-black text-xs font-bold px-3 py-2 rounded-xl hover:bg-[#d4ff33] transition-all active:scale-95 shrink-0"
+          >
+            Crear contraseña
+          </Link>
+          <button
+            onClick={dismissPwBanner}
+            title="Cerrar"
+            className="w-8 h-8 rounded-lg text-slate-500 hover:text-white hover:bg-white/8 transition-all flex items-center justify-center shrink-0"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
 
       {/* Planificación + attendance */}
       <Section

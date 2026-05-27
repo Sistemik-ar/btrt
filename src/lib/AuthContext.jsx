@@ -23,10 +23,18 @@ export function AuthProvider({ children }) {
       if (session?.user) loadProfile(session.user.id)
     })
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null)
       if (session?.user) loadProfile(session.user.id)
       else setProfile(null)
+
+      // Password recovery flow: Supabase fires this when the user lands via
+      // a reset-password email link. Redirect them to the form to set a new one.
+      if (event === 'PASSWORD_RECOVERY') {
+        if (window.location.pathname !== '/reset-password') {
+          window.location.assign('/reset-password?recovery=1')
+        }
+      }
     })
 
     return () => subscription.unsubscribe()
