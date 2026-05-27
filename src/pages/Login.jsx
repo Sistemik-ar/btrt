@@ -1,12 +1,28 @@
+import { useState } from 'react'
 import { useAuth } from '../lib/AuthContext'
+import { supabase } from '../lib/supabase'
 
 export default function Login() {
   const { signInWithGoogle, devLogin } = useAuth()
+  const [email,    setEmail]    = useState('')
+  const [password, setPassword] = useState('')
+  const [error,    setError]    = useState('')
+  const [loading,  setLoading]  = useState(false)
+  const [mode,     setMode]     = useState('google') // 'google' | 'email'
+
+  async function handleEmailLogin(e) {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error) setError(error.message)
+    setLoading(false)
+  }
 
   return (
     <div className="min-h-dvh bg-[#080810] flex flex-col items-center justify-center px-6 gap-6">
 
-      {/* Logo + brand */}
+      {/* Logo */}
       <div className="flex flex-col items-center gap-4">
         <div className="relative">
           <img
@@ -31,26 +47,74 @@ export default function Login() {
 
       {/* Card */}
       <div className="w-full max-w-xs bg-[#13131F] border border-white/[0.07] rounded-3xl p-6 flex flex-col gap-4 shadow-2xl">
-        <p className="text-slate-400 text-sm text-center leading-relaxed">
-          Ingresá con tu cuenta de Google para ver la planificación y confirmar asistencia.
-        </p>
 
-        <button
-          onClick={signInWithGoogle}
-          className="flex items-center justify-center gap-3 bg-white text-gray-800 font-semibold py-3.5 px-6 rounded-2xl hover:bg-gray-50 active:scale-95 transition-all text-sm shadow-lg"
-        >
-          <GoogleIcon />
-          Entrar con Google
-        </button>
-
-        <div className="flex items-center gap-3 my-1">
-          <div className="flex-1 h-px bg-white/5" />
-          <span className="text-slate-700 text-xs">Bariloche, Argentina</span>
-          <div className="flex-1 h-px bg-white/5" />
+        {/* Mode toggle */}
+        <div className="flex bg-[#0A0A14] rounded-xl p-1 gap-1">
+          <button onClick={() => setMode('google')}
+            className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-all ${
+              mode === 'google' ? 'bg-[#13131F] text-white shadow' : 'text-slate-500 hover:text-slate-300'
+            }`}>
+            Google
+          </button>
+          <button onClick={() => setMode('email')}
+            className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-all ${
+              mode === 'email' ? 'bg-[#13131F] text-white shadow' : 'text-slate-500 hover:text-slate-300'
+            }`}>
+            Email
+          </button>
         </div>
 
+        {mode === 'google' ? (
+          <>
+            <p className="text-slate-400 text-sm text-center leading-relaxed">
+              Ingresá con tu cuenta de Google.
+            </p>
+            <button
+              onClick={signInWithGoogle}
+              className="flex items-center justify-center gap-3 bg-white text-gray-800 font-semibold py-3.5 px-6 rounded-2xl hover:bg-gray-50 active:scale-95 transition-all text-sm shadow-lg"
+            >
+              <GoogleIcon />
+              Entrar con Google
+            </button>
+          </>
+        ) : (
+          <form onSubmit={handleEmailLogin} className="flex flex-col gap-3">
+            <div>
+              <label className="text-slate-500 text-[10px] font-bold uppercase tracking-wider block mb-1">Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="roco@gmail.com"
+                required
+                className="w-full bg-[#0A0A14] text-white rounded-xl px-3 py-2.5 text-sm border border-white/5 placeholder-slate-600 focus:outline-none focus:border-[#AADD00]/40"
+              />
+            </div>
+            <div>
+              <label className="text-slate-500 text-[10px] font-bold uppercase tracking-wider block mb-1">Contraseña</label>
+              <input
+                type="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                className="w-full bg-[#0A0A14] text-white rounded-xl px-3 py-2.5 text-sm border border-white/5 placeholder-slate-600 focus:outline-none focus:border-[#AADD00]/40"
+              />
+            </div>
+            {error && (
+              <p className="text-red-400 text-xs text-center bg-red-500/10 border border-red-500/20 rounded-xl px-3 py-2">
+                {error === 'Invalid login credentials' ? 'Email o contraseña incorrectos' : error}
+              </p>
+            )}
+            <button type="submit" disabled={loading}
+              className="bg-[#AADD00] text-black font-bold py-3 rounded-2xl text-sm active:scale-95 transition-all disabled:opacity-50 hover:bg-[#c4f01a]">
+              {loading ? 'Ingresando...' : 'Ingresar'}
+            </button>
+          </form>
+        )}
+
         <p className="text-slate-700 text-[11px] text-center leading-relaxed">
-          Solo miembros del club. Si tenés problemas para ingresar, contactá a Roco.
+          Solo miembros del club. Si tenés problemas, contactá a Roco.
         </p>
       </div>
 
@@ -59,7 +123,7 @@ export default function Login() {
           onClick={devLogin}
           className="text-slate-700 text-xs hover:text-[#AADD00]/60 transition-colors border border-white/5 px-4 py-2 rounded-xl"
         >
-          [dev] entrar sin Google
+          [dev] entrar sin login
         </button>
       )}
     </div>
