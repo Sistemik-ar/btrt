@@ -28,17 +28,17 @@ export default function Login() {
           <img
             src="/logo.png"
             alt="BTRT"
-            className="w-24 h-24 rounded-3xl object-cover shadow-2xl shadow-[#C6FF00]/10"
+            className="w-24 h-24 rounded-3xl object-cover shadow-2xl shadow-brand/10"
             onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex' }}
           />
-          <div className="w-24 h-24 rounded-3xl bg-[#C6FF00]/15 items-center justify-center text-[#C6FF00] font-black text-3xl border border-[#C6FF00]/20"
+          <div className="w-24 h-24 rounded-3xl bg-brand/15 items-center justify-center text-brand font-black text-3xl border border-brand/20"
             style={{ display: 'none' }}>
             B
           </div>
         </div>
         <div className="text-center">
           <h1 className="text-3xl font-black text-white tracking-tight">BTRT</h1>
-          <p className="text-[#C6FF00]/80 text-xs font-semibold uppercase tracking-[0.2em] mt-1">
+          <p className="text-brand/80 text-xs font-semibold uppercase tracking-[0.2em] mt-1">
             Bandurrias Trail Running Team
           </p>
           <p className="text-slate-600 text-xs mt-1">Bariloche, Patagonia</p>
@@ -46,7 +46,7 @@ export default function Login() {
       </div>
 
       {/* Card */}
-      <div className="w-full max-w-xs bg-[#0C1020] border border-white/[0.1] rounded-3xl p-6 flex flex-col gap-4 shadow-2xl shadow-black/60">
+      <div className="w-full max-w-xs bg-card border border-white/[0.1] rounded-3xl p-6 flex flex-col gap-4 shadow-2xl shadow-black/60">
 
         {/* Mode toggle */}
         <div className="flex bg-[#060810] rounded-xl p-1 gap-1">
@@ -87,7 +87,7 @@ export default function Login() {
                 onChange={e => setEmail(e.target.value)}
                 placeholder="roco@gmail.com"
                 required
-                className="w-full bg-[#060810] text-white rounded-xl px-3 py-2.5 text-sm border border-white/5 placeholder-slate-600 focus:outline-none focus:border-[#C6FF00]/40"
+                className="w-full bg-[#060810] text-white rounded-xl px-3 py-2.5 text-sm border border-white/5 placeholder-slate-600 focus:outline-none focus:border-brand/40"
               />
             </div>
             <div>
@@ -98,7 +98,7 @@ export default function Login() {
                 onChange={e => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
-                className="w-full bg-[#060810] text-white rounded-xl px-3 py-2.5 text-sm border border-white/5 placeholder-slate-600 focus:outline-none focus:border-[#C6FF00]/40"
+                className="w-full bg-[#060810] text-white rounded-xl px-3 py-2.5 text-sm border border-white/5 placeholder-slate-600 focus:outline-none focus:border-brand/40"
               />
             </div>
             {error && (
@@ -107,7 +107,7 @@ export default function Login() {
               </p>
             )}
             <button type="submit" disabled={loading}
-              className="bg-[#C6FF00] text-black font-bold py-3 rounded-2xl text-sm active:scale-95 transition-all disabled:opacity-50 hover:bg-[#c4f01a]">
+              className="bg-brand text-black font-bold py-3 rounded-2xl text-sm active:scale-95 transition-all disabled:opacity-50 hover:bg-[#c4f01a]">
               {loading ? 'Ingresando...' : 'Ingresar'}
             </button>
           </form>
@@ -121,7 +121,7 @@ export default function Login() {
       {import.meta.env.DEV && (
         <button
           onClick={devLogin}
-          className="text-slate-700 text-xs hover:text-[#C6FF00]/60 transition-colors border border-white/5 px-4 py-2 rounded-xl"
+          className="text-slate-700 text-xs hover:text-brand/60 transition-colors border border-white/5 px-4 py-2 rounded-xl"
         >
           [dev] entrar sin login
         </button>

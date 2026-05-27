@@ -8,7 +8,7 @@ const DAY_ORDER = ['Lunes','Martes','Miércoles','Miércoles/Jueves','Jueves','V
 const BADGE = {
   quality: { label: 'Calidad · Llano',    bg: 'bg-blue-500/10',    text: 'text-blue-400',   border: 'border border-blue-500/30'    },
   hills:   { label: 'Cuestas · Terreno',  bg: 'bg-orange-500/10',  text: 'text-orange-400', border: 'border border-orange-500/30'  },
-  fondazo: { label: 'Fondo de Montaña',   bg: 'bg-[#C6FF00]/10',   text: 'text-[#C6FF00]',  border: 'border border-[#C6FF00]/30'   },
+  fondazo: { label: 'Fondo de Montaña',   bg: 'bg-brand/10',   text: 'text-brand',  border: 'border border-brand/30'   },
   rest:    { label: 'Recuperación',       bg: 'bg-white/5',        text: 'text-slate-500',  border: 'border border-white/5'        },
 }
 
@@ -82,7 +82,7 @@ function RichCard({ session, rich, confirmed, loading, onToggle }) {
 
   return (
     <div className={`rounded-2xl overflow-hidden border transition-colors shadow-md shadow-black/40 ${
-      confirmed ? 'border-[#C6FF00]/35 bg-[#0E1A08]' : 'border-white/[0.1] bg-[#0A0E1C]'
+      confirmed ? 'border-brand/35 bg-[#0E1A08]' : 'border-white/[0.1] bg-card'
     }`}>
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
@@ -99,7 +99,7 @@ function RichCard({ session, rich, confirmed, loading, onToggle }) {
             onClick={onToggle}
             disabled={loading}
             className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all active:scale-90 disabled:opacity-40 ${
-              confirmed ? 'bg-[#C6FF00] text-black' : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
+              confirmed ? 'bg-brand text-black' : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
             }`}
           >
             {confirmed ? <Check size={12} /> : <Plus size={12} />}
@@ -129,9 +129,9 @@ function RichCard({ session, rich, confirmed, loading, onToggle }) {
 
         {/* Meetpoint */}
         {session.location && (
-          <div className="flex items-start gap-2 bg-[#C6FF00]/[0.06] border-l-2 border-[#C6FF00] pl-3 py-1.5 rounded-r-xl">
-            <span className="text-[10px] text-[#C6FF00] font-semibold uppercase tracking-wider mt-0.5">📍</span>
-            <p className="text-[#C6FF00]/80 text-xs leading-snug">{session.location}</p>
+          <div className="flex items-start gap-2 bg-brand/[0.06] border-l-2 border-brand pl-3 py-1.5 rounded-r-xl">
+            <span className="text-[10px] text-brand font-semibold uppercase tracking-wider mt-0.5">📍</span>
+            <p className="text-brand/80 text-xs leading-snug">{session.location}</p>
           </div>
         )}
 
@@ -147,7 +147,7 @@ function RichCard({ session, rich, confirmed, loading, onToggle }) {
                   <button key={k} onClick={() => setTab(k)}
                     className={`text-[11px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg border transition-all ${
                       tab === k
-                        ? 'bg-[#C6FF00] text-black border-[#C6FF00]'
+                        ? 'bg-brand text-black border-brand'
                         : 'bg-transparent text-slate-500 border-white/10 hover:border-white/20 hover:text-slate-300'
                     }`}
                   >{l}</button>
@@ -159,13 +159,13 @@ function RichCard({ session, rich, confirmed, loading, onToggle }) {
             {tab === 'session' && (
               <div className="flex flex-col gap-3">
                 {rich.objective && (
-                  <p className="text-[#C6FF00] text-sm font-medium leading-snug">{rich.objective}</p>
+                  <p className="text-brand text-sm font-medium leading-snug">{rich.objective}</p>
                 )}
                 {rich.activities?.length > 0 && (
                   <ul className="flex flex-col gap-1.5">
                     {rich.activities.map((a, i) => (
                       <li key={i} className="flex gap-2 items-start text-xs text-slate-400 leading-snug">
-                        <span className="text-[#C6FF00] mt-0.5 shrink-0">›</span>
+                        <span className="text-brand mt-0.5 shrink-0">›</span>
                         {a}
                       </li>
                     ))}
@@ -179,8 +179,8 @@ function RichCard({ session, rich, confirmed, loading, onToggle }) {
                   </div>
                 )}
                 {rich.hbox && (
-                  <div className="border border-[#C6FF00]/20 bg-[#C6FF00]/5 rounded-xl p-3">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#C6FF00] mb-1.5">{rich.hbox.title}</p>
+                  <div className="border border-brand/20 bg-brand/5 rounded-xl p-3">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-brand mb-1.5">{rich.hbox.title}</p>
                     <p className="text-xs text-slate-400 leading-relaxed">{rich.hbox.content}</p>
                   </div>
                 )}
@@ -210,7 +210,7 @@ function RichCard({ session, rich, confirmed, loading, onToggle }) {
         {rich.duration && (
           <div>
             <div className="h-px bg-white/5 rounded-full overflow-hidden">
-              <div className="h-full bg-[#C6FF00]/50 rounded-full" style={{ width: `${rich.durationPct ?? 70}%` }} />
+              <div className="h-full bg-brand/50 rounded-full" style={{ width: `${rich.durationPct ?? 70}%` }} />
             </div>
             <p className="text-slate-600 text-[10px] text-right uppercase tracking-wider mt-1">{rich.duration}</p>
           </div>
@@ -224,10 +224,10 @@ function RichCard({ session, rich, confirmed, loading, onToggle }) {
 function SimpleCard({ session, confirmed, loading, onToggle }) {
   return (
     <div className={`rounded-2xl p-4 flex items-start gap-4 border transition-all shadow-sm shadow-black/30 ${
-      confirmed ? 'border-[#C6FF00]/35 bg-[#0E1A08]' : 'border-white/[0.1] bg-[#0A0E1C] hover:border-white/[0.16]'
+      confirmed ? 'border-brand/35 bg-[#0E1A08]' : 'border-white/[0.1] bg-card hover:border-white/[0.16]'
     }`}>
       <div className={`shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold mt-0.5 ${
-        confirmed ? 'bg-[#C6FF00]/15 text-[#C6FF00]' : 'bg-white/5 text-slate-400'
+        confirmed ? 'bg-brand/15 text-brand' : 'bg-white/5 text-slate-400'
       }`}>{session.time}</div>
       <div className="flex-1 min-w-0">
         {session.location && <p className="text-slate-500 text-xs truncate mb-1">📍 {session.location}</p>}
@@ -237,7 +237,7 @@ function SimpleCard({ session, confirmed, loading, onToggle }) {
       </div>
       <button onClick={onToggle} disabled={loading}
         className={`shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-90 disabled:opacity-40 mt-0.5 ${
-          confirmed ? 'bg-[#C6FF00] text-black' : 'bg-white/5 text-slate-500 hover:bg-white/10'
+          confirmed ? 'bg-brand text-black' : 'bg-white/5 text-slate-500 hover:bg-white/10'
         }`}>
         {confirmed ? <Check size={15} /> : <Plus size={15} />}
       </button>

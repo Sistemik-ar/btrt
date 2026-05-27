@@ -7,7 +7,9 @@ import Home from './pages/Home'
 import Admin from './pages/Admin'
 import { isAdmin as checkAdmin } from './lib/auth'
 
-const Search = lazy(() => import('./pages/Search'))
+const Search   = lazy(() => import('./pages/Search'))
+const Schedule = lazy(() => import('./pages/Schedule'))
+const Stats    = lazy(() => import('./pages/Stats'))
 
 function AppRoutes() {
   const { user } = useAuth()
@@ -29,13 +31,31 @@ function AppRoutes() {
         <Route path="/" element={<Home />} />
         <Route path="/admin" element={isAdmin ? <Admin /> : <Navigate to="/" replace />} />
         <Route path="/buscar" element={
-          <Suspense fallback={<div className="flex items-center justify-center py-20"><span className="text-slate-500 text-sm">Cargando...</span></div>}>
+          <Suspense fallback={<Loader />}>
             <Search />
+          </Suspense>
+        } />
+        <Route path="/planificacion-semanal" element={
+          <Suspense fallback={<Loader />}>
+            <Schedule />
+          </Suspense>
+        } />
+        <Route path="/estadisticas-carreras" element={
+          <Suspense fallback={<Loader />}>
+            <Stats />
           </Suspense>
         } />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Layout>
+  )
+}
+
+function Loader() {
+  return (
+    <div className="flex items-center justify-center py-20">
+      <span className="text-slate-500 text-sm">Cargando...</span>
+    </div>
   )
 }
 
