@@ -29,7 +29,7 @@ export default function Search() {
         let q = supabase
           .from('resultados')
           .select(`*, eventos(nombre, fecha, localidad, pais, deporte, participant_count)`)
-          .order('eventos(fecha)', { ascending: false })
+          .order('id', { ascending: false })
           .limit(100)
         parts.forEach(part => { q = q.ilike('nombre_norm', `%${part}%`) })
         const { data: rows, error } = await q
