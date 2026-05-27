@@ -1,0 +1,146 @@
+{
+  "2026-06-01": {
+    "id": "2026-06-01",
+    "published": true,
+    "weekNumber": 2,
+    "period": "Período Base · Semana 2",
+    "dates": "1 — 7 de Junio · 2026",
+    "docType": "Planificación Semanal",
+    "docSpec": null,
+    "attendance": {
+      "label": "📋 Registrá tu asistencia para esta semana",
+      "sub": "Abrís el form una sola vez · marcás los turnos que vas · enviás",
+      "okUrl":  "https://docs.google.com/forms/d/e/1FAIpQLSeuDPaLkrdHq4dH1E670Yql85l2EAHtEF5HFM100VH56O3yOw/viewform?usp=pp_url&entry.1016398751=Confirmo",
+      "modUrl": "https://docs.google.com/forms/d/e/1FAIpQLSeuDPaLkrdHq4dH1E670Yql85l2EAHtEF5HFM100VH56O3yOw/viewform?usp=pp_url&entry.1016398751=Cancelo"
+    },
+    "cards": [
+      {
+        "id": "c1",
+        "dayLabel": "Lunes / Martes",
+        "badge": { "type": "quality", "label": "Técnica + Aeróbico" },
+        "turnos": [
+          { "text": "Lun ⏰ 18hs" },
+          { "text": "Mar ⏰ 9hs" },
+          { "text": "Mar ⏰ 18hs" }
+        ],
+        "turnoNote": "→ el corredor elige UN turno",
+        "meetpoint": {
+          "text": "La Usina · Virgen de las Nieves",
+          "url": "https://goo.gl/maps/jHvFQjUs8ziDZS1h7?g_st=awb",
+          "pending": false
+        },
+        "objective": "Activación neuromuscular + técnica de carrera en terreno natural + rodaje aeróbico Z1-Z2 con mayor volumen que semana 1",
+        "activities": [
+          "Entrada en calor dinámica — movilidad articular + trote suave 8-10 min",
+          "Técnica de carrera: postura, apoyo de pie, cadencia — drills en terreno llano o pista (10-15 min)",
+          "Bloque aeróbico Z1-Z2 con cambios de ritmo cortos: más repeticiones y duración que semana 1",
+          "Cierre: trote suave + estiramiento dinámico 5 min"
+        ],
+        "note": null,
+        "niveles": [
+          { "type": "ini", "text": "35 min trote Z1 continuo + técnica básica de pisada. 2 aceleraciones suaves de 30\" al final. Sin cambios de ritmo sostenidos aún." },
+          { "type": "med", "text": "50 min Z2 + 5×1' al 78% FC con recuperación activa. Coordinación completa. 5 repeticiones más que S1." },
+          { "type": "avz", "text": "65 min Z2 + 8×1'30\" al 80% FC + coordinación y saltabilidad completa. 2 series más y ritmo ligeramente más exigido que S1." }
+        ],
+        "durationLabel": "90 – 100 min sesión total"
+      },
+      {
+        "id": "c2",
+        "dayLabel": "Miércoles / Jueves",
+        "badge": { "type": "hills", "label": "🏔 Cuesta · Fuerza Específica" },
+        "turnos": [
+          { "text": "Mié ⏰ 18hs" },
+          { "text": "Jue ⏰ 9hs" },
+          { "text": "Jue ⏰ 18hs" }
+        ],
+        "turnoNote": "→ el corredor elige UN turno",
+        "meetpoint": {
+          "text": "Herradura · Cerro San Martín",
+          "url": "https://maps.app.goo.gl/3LqoQvu4uqTngK5S6?g_st=awb",
+          "pending": false
+        },
+        "objective": "Fuerza específica en subida con mayor volumen de series + adaptación músculo-tendinosa a la pendiente + trabajo excéntrico de bajada técnica activa",
+        "activities": [
+          "Entrada en calor en llano 10 min + activación glúteos, isquiotibiales y tobillos",
+          "Series en cuesta corta-media (6-15% pendiente): postura, inclinación adelante, empuje de brazos — mismo foco técnico que semana 1, más volumen",
+          "Trabajo excéntrico de bajada: frenada progresiva, rodilla semiflexionada, mirada adelante — no es recuperación, es estímulo",
+          "La bajada es tan importante como la subida. Técnica activa en todo momento."
+        ],
+        "note": {
+          "strong": "Progresión S1 → S2:",
+          "text": "El terreno cambia (Cerro Otto → Herradura) y el volumen de series sube. El foco técnico es idéntico. Quien no ejecutó bien la bajada la semana pasada, prioriza eso antes de agregar series."
+        },
+        "niveles": [
+          { "type": "ini", "text": "8×30\" cuesta suave (6-8%), caminar bajada con técnica activa. Dos repeticiones más que semana 1. Sin apurar." },
+          { "type": "med", "text": "10×1' cuesta media (8-12%), trote bajada controlado técnico, 90\" recuperación. Mantener postura en las últimas series." },
+          { "type": "avz", "text": "12×90\" cuesta progresiva (10-15%), bajada activa técnica, descanso 90\". Gestión mental en series 9-12: mantener forma, no apurar ritmo." }
+        ],
+        "durationLabel": "90 – 110 min sesión total"
+      },
+      {
+        "id": "c3",
+        "dayLabel": "Viernes",
+        "rest": true,
+        "badge": { "type": "rest", "label": "Recuperación" },
+        "restBody": {
+          "title": "Recuperación activa opcional",
+          "lines": [
+            "Caminata suave · natación · movilidad — 20 a 30 min máximo",
+            "No exigir. El cuerpo asimila el estímulo acumulado. El sábado requiere piernas frescas."
+          ]
+        }
+      },
+      {
+        "id": "c4",
+        "dayLabel": "Domingo",
+        "rest": true,
+        "badge": { "type": "rest", "label": "Descanso" },
+        "restBody": {
+          "title": "Descanso completo",
+          "lines": [
+            "Sin actividad física estructurada.",
+            "Sueño, hidratación y nutrición son el entrenamiento de hoy."
+          ]
+        }
+      },
+      {
+        "id": "c5",
+        "dayLabel": "Sábado — Fondo de Montaña",
+        "saturday": true,
+        "badge": { "type": "fondazo", "label": "🏔 D+600–1200m · Mayor desnivel que S1" },
+        "turnos": [
+          { "text": "⏰ Salida 8:30hs" }
+        ],
+        "turnoNote": "📣 Lugar según condiciones climáticas · confirmar por grupo",
+        "turnoNoteColor": "orange",
+        "meetpoint": {
+          "text": "Punto de encuentro a confirmar · se informa por el grupo antes del sábado",
+          "icon": "⚠️",
+          "pending": true
+        },
+        "objective": "Volumen aeróbico prolongado en montaña + adaptación metabólica al esfuerzo continuo en terreno real + mayor desnivel acumulado que semana 1",
+        "structureLabel": "Estructura de la sesión",
+        "activities": [
+          "Salida grupal coordinada a las 8:30hs — no salida escalonada individual sin aviso previo",
+          "Caminar las subidas fuertes es correcto y estratégico — no es debilidad",
+          "Hidratación cada 20-25 min sin esperar sed — especialmente en días fríos o nublados de montaña patagónica",
+          "Los niveles MED y AVZ salen con nutrición planificada: gel, barra o comida real. No improvisar en montaña.",
+          "Evaluación grupal breve al finalizar — sensaciones, zona de trabajo, ejecución técnica"
+        ],
+        "note": {
+          "strong": "Test de intensidad:",
+          "text": "Si el corredor no puede mantener conversación durante el recorrido, el ritmo es incorrecto. Z2 es la zona, no la excepción. Este fondo es más largo que semana 1 — más razón aún para respetar la zona desde el primer kilómetro."
+        },
+        "niveles": [
+          { "type": "ini", "text": "75–90 min · D+300-500m · pace muy cómodo · sin presión de distancia · terminar descansado · hidratación cada 20 min" },
+          { "type": "med", "text": "2.5–3.5 hs · D+600-800m · Z2 sostenido · caminar subidas >12% · nutrición planificada · hidratación cada 20-25 min" },
+          { "type": "avz", "text": "4–5.5 hs · D+900-1200m · Z2 con picos Z3 tolerados en subidas fuertes · bajada activa técnica · estrategia nutricional detallada obligatoria" }
+        ]
+      }
+    ],
+    "footer": {
+      "left":  "Bandurrias Trail Running Team · Bariloche, Patagonia",
+      "right": "Período Base · Semana 2 · 1–7 de Junio 2026"
+    }
+  }
+}

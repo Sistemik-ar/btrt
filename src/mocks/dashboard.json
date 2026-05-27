@@ -1,0 +1,34 @@
+{
+  "stats": {
+    "activities":   { "value": 24,       "delta": 12, "subLabel": "vs semana anterior", "spark": [12, 14, 13, 18, 16, 21, 24] },
+    "kilometers":   { "value": 482,      "unit": "km", "delta": 18, "subLabel": "vs semana anterior", "spark": [340, 380, 420, 390, 440, 460, 482] },
+    "participants": { "value": 156,      "delta": 8,  "subLabel": "vs semana anterior", "spark": [120, 128, 135, 140, 144, 150, 156] },
+    "hours":        { "value": "31h 42m", "delta": 10, "subLabel": "vs semana anterior", "spark": [18, 21, 22, 26, 25, 29, 31] }
+  },
+  "recent": [
+    { "id": 1, "title": "Trail Cerro de la Cruz",  "date": "2025-05-18", "time": "08:00", "distance": 12.4, "elevation": 560, "sport": "trail",        "status": "completada" },
+    { "id": 2, "title": "Entrenamiento Nocturno", "date": "2025-05-16", "time": "19:30", "distance": 8.7,  "elevation": 320, "sport": "entrenamiento", "status": "completada" },
+    { "id": 3, "title": "Trail La Bandurrria",     "date": "2025-05-14", "time": "07:30", "distance": 21.3, "elevation": 980, "sport": "trail",        "status": "completada" },
+    { "id": 4, "title": "Rodaje Suave",            "date": "2025-05-12", "time": "18:00", "distance": 6.2,  "elevation": 150, "sport": "entrenamiento", "status": "programada" },
+    { "id": 5, "title": "Fondo Largo",             "date": "2025-05-10", "time": "06:00", "distance": 18.9, "elevation": 750, "sport": "trail",        "status": "completada" }
+  ],
+  "distribution": [
+    { "label": "Trail Running", "value": 45, "color": "#C6FF00" },
+    { "label": "Entrenamiento", "value": 25, "color": "#FBBF24" },
+    { "label": "Competencia",   "value": 20, "color": "#3B82F6" },
+    { "label": "Recuperación",  "value": 10, "color": "#A855F7" }
+  ],
+  "weekly": {
+    "kilometros":   [42, 38, 56, 28, 64, 71, 48],
+    "participantes": [22, 28, 31, 19, 35, 42, 38],
+    "tiempo":        [3.2, 2.8, 4.5, 2.1, 5.2, 6.0, 3.8]
+  },
+  "leaderboard": [
+    { "rank": 1, "name": "Juan Pérez",       "km": 48, "initials": "JP", "crown": true  },
+    { "rank": 2, "name": "María González",   "km": 42, "initials": "MG", "crown": false },
+    { "rank": 3, "name": "Carlos López",     "km": 38, "initials": "CL", "crown": false },
+    { "rank": 4, "name": "Ana Martínez",     "km": 35, "initials": "AM", "crown": false },
+    { "rank": 5, "name": "Diego Rodríguez",  "km": 31, "initials": "DR", "crown": false }
+  ],
+  "dateRange": "12 May - 18 May 2025"
+}
