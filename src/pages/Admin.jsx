@@ -2,7 +2,9 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 
-const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL
+const ADMIN_EMAILS = new Set(
+  (import.meta.env.VITE_ADMIN_EMAIL ?? '').split(',').map(e => e.trim()).filter(Boolean)
+)
 const DAYS  = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo']
 const TIMES = ['6:00','7:00','8:00','9:00','10:00','16:00','17:00','18:00','19:00','20:00']
 
@@ -16,7 +18,7 @@ function getCurrentWeekId() {
 /* ── Main page ─────────────────────────────────────────────────── */
 export default function Admin() {
   const { user } = useAuth()
-  const isAdmin  = user?.email === ADMIN_EMAIL
+  const isAdmin  = ADMIN_EMAILS.has(user?.email)
   const [activeTab, setActiveTab] = useState('week')
 
   if (!isAdmin) {
