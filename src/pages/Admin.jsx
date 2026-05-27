@@ -40,7 +40,7 @@ export default function Admin() {
   ]
 
   return (
-    <div className="flex flex-col gap-6 max-w-6xl mx-auto">
+    <div className="flex flex-col gap-8 max-w-6xl mx-auto">
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 pb-5 border-b border-white/5">
@@ -268,6 +268,7 @@ function MembersTab() {
   const [filter,     setFilter]    = useState('all')
   const [editingWa,  setEditingWa] = useState(null) // member id being edited
   const [waInput,    setWaInput]   = useState('')
+  const [waError,    setWaError]   = useState(null)
   const [loading,    setLoading]   = useState(true)
 
   useEffect(() => {
@@ -281,8 +282,13 @@ function MembersTab() {
   }
 
   async function saveWaId(id) {
+    setWaError(null)
     const cleaned = waInput.replace(/\D/g, '')
-    await supabase.from('members').update({ wa_id: cleaned || null }).eq('id', id)
+    const { error } = await supabase.from('members').update({ wa_id: cleaned || null }).eq('id', id)
+    if (error) {
+      setWaError(error.message)
+      return
+    }
     setMembers(prev => prev.map(m => m.id === id ? { ...m, wa_id: cleaned || null } : m))
     setEditingWa(null)
     setWaInput('')
@@ -309,16 +315,16 @@ function MembersTab() {
     <div className="flex flex-col gap-5">
 
       {/* Summary cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
           { label: 'Total',           value: counts.all,    color: 'text-white'       },
           { label: 'Al día',          value: counts.active, color: 'text-[#AADD00]'   },
           { label: 'Morosos',         value: counts.moroso, color: 'text-yellow-400'  },
           { label: 'WA vinculado',    value: `${withWa}/${counts.all}`, color: withWa === counts.all ? 'text-[#AADD00]' : 'text-slate-400' },
         ].map(({ label, value, color }) => (
-          <div key={label} className="bg-[#13131F] border border-white/5 rounded-2xl p-4">
-            <p className={`text-2xl font-black ${color}`}>{value}</p>
-            <p className="text-slate-500 text-xs mt-1">{label}</p>
+          <div key={label} className="bg-[#13131F] border border-white/5 rounded-2xl p-5">
+            <p className={`text-3xl font-black ${color}`}>{value}</p>
+            <p className="text-slate-500 text-sm mt-1.5">{label}</p>
           </div>
         ))}
       </div>
@@ -346,7 +352,7 @@ function MembersTab() {
           <div className="w-5 h-5 border-2 border-[#AADD00]/20 border-t-[#AADD00] rounded-full animate-spin" />
         </div>
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3">
           {filtered.map(m => {
             const initials = m.name?.split(' ').slice(0,2).map(w => w[0]).join('').toUpperCase() || '?'
             const lastPay  = m.last_payment
@@ -360,12 +366,12 @@ function MembersTab() {
 
             return (
               <div key={m.id}
-                className="bg-[#13131F] border border-white/5 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+                className="bg-[#13131F] border border-white/5 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center gap-4">
 
                 {/* Avatar + info */}
                 <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div className="w-10 h-10 rounded-xl bg-[#AADD00]/10 flex items-center justify-center shrink-0">
-                    <span className="text-[#AADD00] text-xs font-bold">{initials}</span>
+                  <div className="w-11 h-11 rounded-xl bg-[#AADD00]/10 flex items-center justify-center shrink-0">
+                    <span className="text-[#AADD00] text-sm font-bold">{initials}</span>
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-white font-semibold text-sm truncate">{m.name}</p>
@@ -380,25 +386,30 @@ function MembersTab() {
                 </div>
 
                 {/* WA ID */}
-                <div className="flex items-center gap-2 sm:w-52 shrink-0">
+                <div className="flex flex-col gap-1 sm:w-56 shrink-0">
                   {editingWa === m.id ? (
                     <>
-                      <input
-                        autoFocus
-                        value={waInput}
-                        onChange={e => setWaInput(e.target.value)}
-                        onKeyDown={e => { if (e.key === 'Enter') saveWaId(m.id); if (e.key === 'Escape') setEditingWa(null) }}
-                        placeholder="5492944123456"
-                        className="flex-1 min-w-0 bg-[#0A0A14] text-white rounded-xl px-3 py-2 text-xs border border-[#AADD00]/40 focus:outline-none"
-                      />
-                      <button onClick={() => saveWaId(m.id)}
-                        className="w-8 h-8 rounded-xl bg-[#AADD00]/15 text-[#AADD00] flex items-center justify-center text-xs font-bold hover:bg-[#AADD00]/25 transition-all">
-                        ✓
-                      </button>
-                      <button onClick={() => setEditingWa(null)}
-                        className="w-8 h-8 rounded-xl bg-white/5 text-slate-500 flex items-center justify-center text-xs hover:bg-white/10 transition-all">
-                        ✕
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <input
+                          autoFocus
+                          value={waInput}
+                          onChange={e => { setWaInput(e.target.value); setWaError(null) }}
+                          onKeyDown={e => { if (e.key === 'Enter') saveWaId(m.id); if (e.key === 'Escape') { setEditingWa(null); setWaError(null) } }}
+                          placeholder="5492944123456"
+                          className="flex-1 min-w-0 bg-[#0A0A14] text-white rounded-xl px-3 py-2 text-xs border border-[#AADD00]/40 focus:outline-none"
+                        />
+                        <button onClick={() => saveWaId(m.id)}
+                          className="w-8 h-8 rounded-xl bg-[#AADD00]/15 text-[#AADD00] flex items-center justify-center text-xs font-bold hover:bg-[#AADD00]/25 transition-all shrink-0">
+                          ✓
+                        </button>
+                        <button onClick={() => { setEditingWa(null); setWaError(null) }}
+                          className="w-8 h-8 rounded-xl bg-white/5 text-slate-500 flex items-center justify-center text-xs hover:bg-white/10 transition-all shrink-0">
+                          ✕
+                        </button>
+                      </div>
+                      {waError && (
+                        <p className="text-red-400 text-[10px] leading-tight px-1">{waError}</p>
+                      )}
                     </>
                   ) : (
                     <button

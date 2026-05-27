@@ -3,12 +3,14 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Cell
 } from 'recharts'
-import { decodeHTML, formatTime, parseTimeToMinutes, formatMinutesShort, percentile, parseDistance, formatPace } from '../lib/format'
+import { decodeHTML, titleCase, formatTime, parseTimeToMinutes, formatMinutesShort, percentile, parseDistance, formatPace } from '../lib/format'
 
 const BRAND  = '#AADD00'
 const BRAND2 = '#7aaa00'
 
 export default function RaceStats({ results }) {
+  const runnerName = titleCase(results[0]?.nombre ?? '')
+
   const sorted = [...results]
     .filter(r => r.eventos?.fecha)
     .sort((a, b) => new Date(a.eventos.fecha) - new Date(b.eventos.fecha))
@@ -57,6 +59,21 @@ export default function RaceStats({ results }) {
 
   return (
     <div className="flex flex-col gap-5">
+
+      {/* ── Runner header ── */}
+      {runnerName && (
+        <div className="flex items-end gap-4 pb-1 border-b border-white/5">
+          <div className="w-12 h-12 rounded-2xl bg-[#AADD00]/10 border border-[#AADD00]/20 flex items-center justify-center shrink-0">
+            <span className="text-[#AADD00] font-black text-lg leading-none">
+              {runnerName.charAt(0)}
+            </span>
+          </div>
+          <div>
+            <p className="text-white font-black text-xl leading-tight tracking-tight">{runnerName}</p>
+            <p className="text-slate-500 text-xs mt-0.5">{results.length} carrera{results.length !== 1 ? 's' : ''} seleccionada{results.length !== 1 ? 's' : ''}</p>
+          </div>
+        </div>
+      )}
 
       {/* ── Summary cards ── */}
       <div className={`grid gap-4 ${bestPace != null ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3'}`}>

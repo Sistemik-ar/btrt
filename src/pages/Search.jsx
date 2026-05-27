@@ -71,7 +71,7 @@ export default function Search() {
       <div className="flex gap-2 mb-5">
         <input
           type="text"
-          placeholder="Nombre o apellido..."
+          placeholder="Rodrigo Florido"
           value={query}
           onChange={e => setQuery(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && search()}
@@ -98,12 +98,31 @@ export default function Search() {
               {results.length > 0 && ' — marcá los que son esta persona'}
             </p>
             {results.length > 0 && (
-              <div className="flex gap-3 text-xs">
-                <button onClick={() => setSelected(new Set(results.map(r => r.id)))} className="text-[#AADD00] font-semibold">todos</button>
-                <button onClick={() => setSelected(new Set())} className="text-slate-600 hover:text-slate-400 transition-colors">ninguno</button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setSelected(new Set(results.map(r => r.id)))}
+                  className="px-3 py-1 rounded-lg bg-[#AADD00]/15 text-[#AADD00] text-xs font-bold border border-[#AADD00]/30 hover:bg-[#AADD00]/25 transition-all"
+                >
+                  todos
+                </button>
+                <button
+                  onClick={() => setSelected(new Set())}
+                  className="px-3 py-1 rounded-lg bg-white/5 text-slate-500 text-xs font-semibold border border-white/8 hover:text-slate-300 hover:bg-white/10 transition-all"
+                >
+                  ninguno
+                </button>
               </div>
             )}
           </div>
+
+          {selected.size > 0 && (
+            <button
+              onClick={() => setShowStats(true)}
+              className="w-full bg-[#AADD00] text-black rounded-2xl py-4 font-bold text-sm active:scale-[0.98] transition-all shadow-lg shadow-[#AADD00]/20 mb-2"
+            >
+              Ver estadísticas · {selected.size} carrera{selected.size !== 1 ? 's' : ''}
+            </button>
+          )}
 
           <div className="flex flex-col gap-2">
             {results.map(r => (
@@ -115,17 +134,6 @@ export default function Search() {
               />
             ))}
           </div>
-
-          {selected.size > 0 && (
-            <div className="sticky bottom-4 mt-6">
-              <button
-                onClick={() => setShowStats(true)}
-                className="w-full bg-[#AADD00] text-black rounded-2xl py-4 font-bold text-sm active:scale-[0.98] transition-all shadow-lg shadow-[#AADD00]/20"
-              >
-                Ver estadísticas · {selected.size} carrera{selected.size !== 1 ? 's' : ''}
-              </button>
-            </div>
-          )}
         </>
       )}
 
@@ -156,16 +164,19 @@ function ResultCard({ result, selected, onToggle }) {
   const tiempo = formatTime(result.tiempo_total)
 
   return (
-    <button
+    <div
+      role="button"
+      tabIndex={0}
       onClick={onToggle}
-      className={`rounded-2xl p-4 flex items-center gap-3 text-left w-full border transition-all active:scale-[0.98] ${
+      onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && onToggle()}
+      className={`rounded-2xl p-4 flex items-center gap-3 w-full border transition-all cursor-pointer select-none active:scale-[0.98] ${
         selected
           ? 'bg-[#AADD00]/[0.07] border-[#AADD00]/30'
           : 'bg-white/[0.03] border-white/5 hover:bg-white/[0.06]'
       }`}
     >
       {/* Checkbox */}
-      <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all ${
+      <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center shrink-0 transition-all ${
         selected ? 'bg-[#AADD00] border-[#AADD00]' : 'border-slate-600'
       }`}>
         {selected && <span className="text-black text-[10px] font-bold leading-none">✓</span>}
@@ -191,7 +202,7 @@ function ResultCard({ result, selected, onToggle }) {
         )}
         {tiempo && <p className="text-slate-400 text-xs mt-1 tabular-nums">{tiempo}</p>}
       </div>
-    </button>
+    </div>
   )
 }
 

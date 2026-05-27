@@ -56,5 +56,5 @@ export function percentile(pos, total) {
   const p = parseInt(pos)
   const t = parseInt(total)
   if (!p || !t || t === 0) return null
-  return Math.round((p / t) * 100)
+  return Math.max(1, Math.round((p / t) * 100))
 }
