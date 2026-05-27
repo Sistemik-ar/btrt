@@ -31,9 +31,15 @@ export default function Search() {
           .select(`*, eventos(nombre, fecha, localidad, pais, deporte, participant_count)`)
           .order('id', { ascending: false })
           .limit(100)
-        parts.forEach(part => { q = q.ilike('nombre_norm', `%${part}%`) })
+        // bug del scraper: el nombre del corredor está en columna `dorsal`
+        parts.forEach(part => { q = q.ilike('dorsal', `%${part}%`) })
         const { data: rows, error } = await q
-        data = error ? [] : (rows || [])
+        // bug del scraper: nombre del corredor está en `dorsal`, categoría en `nombre`
+        data = error ? [] : (rows || []).map(r => ({
+          ...r,
+          nombre: r.dorsal,
+          carrera: r.nombre,
+        }))
       }
     } catch {
       data = []
