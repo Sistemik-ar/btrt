@@ -8,7 +8,9 @@ import Admin from './pages/Admin'
 
 const Search = lazy(() => import('./pages/Search'))
 
-const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL
+const ADMIN_EMAILS = new Set(
+  (import.meta.env.VITE_ADMIN_EMAIL ?? '').split(',').map(e => e.trim()).filter(Boolean)
+)
 
 function AppRoutes() {
   const { user } = useAuth()
@@ -23,7 +25,7 @@ function AppRoutes() {
 
   if (!user) return <Login />
 
-  const isAdmin = user.email === ADMIN_EMAIL
+  const isAdmin = ADMIN_EMAILS.has(user.email)
   return (
     <Layout>
       <Routes>
