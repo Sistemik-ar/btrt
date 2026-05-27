@@ -45,12 +45,12 @@ export default function Admin() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 pb-5 border-b border-white/5">
         <div>
-          <p className="text-[#AADD00]/60 text-[11px] font-bold uppercase tracking-widest mb-1">Panel de administración</p>
+          <p className="text-[#C6FF00]/60 text-[11px] font-bold uppercase tracking-widest mb-1">Panel de administración</p>
           <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight uppercase">BTRT Admin</h1>
           <p className="text-slate-600 text-xs sm:text-sm mt-1 truncate">{user.email}</p>
         </div>
-        <div className="flex items-center gap-2 text-xs text-[#AADD00]/70 bg-[#AADD00]/5 border border-[#AADD00]/20 px-3 py-1.5 rounded-full w-fit">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#AADD00] animate-pulse" />
+        <div className="flex items-center gap-2 text-xs text-[#C6FF00]/70 bg-[#C6FF00]/5 border border-[#C6FF00]/20 px-3 py-1.5 rounded-full w-fit">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#C6FF00] animate-pulse" />
           Admin activo
         </div>
       </div>
@@ -63,8 +63,8 @@ export default function Admin() {
             onClick={() => setActiveTab(id)}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap shrink-0 ${
               activeTab === id
-                ? 'bg-[#AADD00] text-black'
-                : 'bg-[#13131F] text-slate-400 border border-white/5 hover:text-white hover:bg-white/5'
+                ? 'bg-[#C6FF00] text-black'
+                : 'bg-white/[0.04] text-slate-400 border border-white/5 hover:text-white hover:bg-white/5'
             }`}
           >
             <Icon size={15} />
@@ -132,40 +132,40 @@ function WeekTab() {
       {/* Form panel */}
       <div className="flex flex-col gap-4">
         {/* Week selector */}
-        <div className="bg-[#13131F] border border-white/5 rounded-2xl p-4 flex items-center gap-3">
+        <div className="bg-[#0C1020] border border-white/[0.1] rounded-2xl p-4 flex items-center gap-3">
           <div className="flex-1 min-w-0">
             <label className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Semana activa</label>
             <input
               type="date"
               value={weekId}
               onChange={e => setWeekId(e.target.value)}
-              className="mt-1.5 w-full bg-[#0A0A14] text-white rounded-xl px-3 py-2.5 text-sm border border-white/5 focus:outline-none focus:border-[#AADD00]/40"
+              className="mt-1.5 w-full bg-[#060810] text-white rounded-xl px-3 py-2.5 text-sm border border-white/5 focus:outline-none focus:border-[#C6FF00]/40"
             />
           </div>
           {published && (
             <div className="shrink-0 flex flex-col items-center gap-1 text-center">
-              <div className="w-2 h-2 rounded-full bg-[#AADD00]" />
-              <span className="text-[#AADD00] text-[10px] font-bold">Online</span>
+              <div className="w-2 h-2 rounded-full bg-[#C6FF00]" />
+              <span className="text-[#C6FF00] text-[10px] font-bold">Online</span>
             </div>
           )}
         </div>
 
         {/* Nueva sesión */}
-        <div className="bg-[#13131F] border border-white/5 rounded-2xl p-5 flex flex-col gap-3">
+        <div className="bg-[#0C1020] border border-white/[0.1] rounded-2xl p-5 flex flex-col gap-3">
           <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Nueva sesión</p>
 
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="text-slate-600 text-[10px] uppercase tracking-wider mb-1 block">Día</label>
               <select value={newSess.day} onChange={e => setNewSess(p => ({ ...p, day: e.target.value }))}
-                className="w-full bg-[#0A0A14] text-white rounded-xl px-3 py-2.5 text-sm border border-white/5 focus:outline-none focus:border-[#AADD00]/40">
+                className="w-full bg-[#060810] text-white rounded-xl px-3 py-2.5 text-sm border border-white/5 focus:outline-none focus:border-[#C6FF00]/40">
                 {DAYS.map(d => <option key={d}>{d}</option>)}
               </select>
             </div>
             <div>
               <label className="text-slate-600 text-[10px] uppercase tracking-wider mb-1 block">Hora</label>
               <select value={newSess.time} onChange={e => setNewSess(p => ({ ...p, time: e.target.value }))}
-                className="w-full bg-[#0A0A14] text-white rounded-xl px-3 py-2.5 text-sm border border-white/5 focus:outline-none focus:border-[#AADD00]/40">
+                className="w-full bg-[#060810] text-white rounded-xl px-3 py-2.5 text-sm border border-white/5 focus:outline-none focus:border-[#C6FF00]/40">
                 {TIMES.map(t => <option key={t}>{t}</option>)}
               </select>
             </div>
@@ -175,7 +175,7 @@ function WeekTab() {
             <label className="text-slate-600 text-[10px] uppercase tracking-wider mb-1 block">Lugar</label>
             <input placeholder="Pista de atletismo, Cerro, etc." value={newSess.location}
               onChange={e => setNewSess(p => ({ ...p, location: e.target.value }))}
-              className="w-full bg-[#0A0A14] text-white rounded-xl px-3 py-2.5 text-sm border border-white/5 placeholder-slate-600 focus:outline-none focus:border-[#AADD00]/40" />
+              className="w-full bg-[#060810] text-white rounded-xl px-3 py-2.5 text-sm border border-white/5 placeholder-slate-600 focus:outline-none focus:border-[#C6FF00]/40" />
           </div>
 
           <div>
@@ -183,11 +183,11 @@ function WeekTab() {
             <textarea placeholder="Ej: 6×400m al 95% con recuperación caminada de 90s" value={newSess.description}
               onChange={e => setNewSess(p => ({ ...p, description: e.target.value }))}
               rows={3}
-              className="w-full bg-[#0A0A14] text-white rounded-xl px-3 py-2.5 text-sm border border-white/5 placeholder-slate-600 resize-none focus:outline-none focus:border-[#AADD00]/40" />
+              className="w-full bg-[#060810] text-white rounded-xl px-3 py-2.5 text-sm border border-white/5 placeholder-slate-600 resize-none focus:outline-none focus:border-[#C6FF00]/40" />
           </div>
 
           <button onClick={addSession}
-            className="w-full bg-[#AADD00] text-black rounded-xl py-3 text-sm font-bold active:scale-[0.98] transition-all hover:bg-[#c4f01a]">
+            className="w-full bg-[#C6FF00] text-black rounded-xl py-3 text-sm font-bold active:scale-[0.98] transition-all hover:bg-[#c4f01a]">
             + Agregar sesión
           </button>
         </div>
@@ -218,7 +218,7 @@ function WeekTab() {
         </div>
 
         {sorted.length === 0 ? (
-          <div className="bg-[#13131F] border border-white/5 rounded-2xl p-12 text-center">
+          <div className="bg-[#0C1020] border border-white/[0.1] rounded-2xl p-12 text-center">
             <p className="text-slate-500 text-sm">Sin sesiones para esta semana.</p>
             <p className="text-slate-600 text-xs mt-1.5">Usá el formulario para agregar.</p>
           </div>
@@ -228,16 +228,16 @@ function WeekTab() {
           const count = s.attendance?.[0]?.count ?? 0
 
           return (
-            <div key={s.id} className="bg-[#13131F] border border-white/5 rounded-2xl p-4 flex items-start gap-4 group">
+            <div key={s.id} className="bg-[#0C1020] border border-white/[0.1] rounded-2xl p-4 flex items-start gap-4 group">
               {/* Day pill */}
-              <div className="shrink-0 w-14 h-14 rounded-xl bg-[#AADD00]/8 border border-[#AADD00]/10 flex flex-col items-center justify-center">
-                <span className="text-[#AADD00] text-[10px] font-bold uppercase tracking-wide leading-tight">{s.day.slice(0,3)}</span>
+              <div className="shrink-0 w-14 h-14 rounded-xl bg-[#C6FF00]/8 border border-[#C6FF00]/10 flex flex-col items-center justify-center">
+                <span className="text-[#C6FF00] text-[10px] font-bold uppercase tracking-wide leading-tight">{s.day.slice(0,3)}</span>
                 {s.time && <span className="text-slate-400 text-[9px] mt-0.5">{s.time}</span>}
               </div>
 
               <div className="flex-1 min-w-0">
                 {badge && (
-                  <span className="text-[#AADD00] text-[10px] font-bold uppercase tracking-widest">{badge.label}</span>
+                  <span className="text-[#C6FF00] text-[10px] font-bold uppercase tracking-widest">{badge.label}</span>
                 )}
                 {s.location && <p className="text-slate-400 text-xs mt-0.5">📍 {s.location}</p>}
                 {s.description && !badge && (
@@ -318,11 +318,11 @@ function MembersTab() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
           { label: 'Total',           value: counts.all,    color: 'text-white'       },
-          { label: 'Al día',          value: counts.active, color: 'text-[#AADD00]'   },
+          { label: 'Al día',          value: counts.active, color: 'text-[#C6FF00]'   },
           { label: 'Morosos',         value: counts.moroso, color: 'text-yellow-400'  },
-          { label: 'WA vinculado',    value: `${withWa}/${counts.all}`, color: withWa === counts.all ? 'text-[#AADD00]' : 'text-slate-400' },
+          { label: 'WA vinculado',    value: `${withWa}/${counts.all}`, color: withWa === counts.all ? 'text-[#C6FF00]' : 'text-slate-400' },
         ].map(({ label, value, color }) => (
-          <div key={label} className="bg-[#13131F] border border-white/5 rounded-2xl p-5">
+          <div key={label} className="bg-[#0C1020] border border-white/[0.1] rounded-2xl p-5">
             <p className={`text-3xl font-black ${color}`}>{value}</p>
             <p className="text-slate-500 text-sm mt-1.5">{label}</p>
           </div>
@@ -335,11 +335,11 @@ function MembersTab() {
           <button key={id} onClick={() => setFilter(id)}
             className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap shrink-0 transition-all ${
               filter === id
-                ? 'bg-[#AADD00]/15 text-[#AADD00] border border-[#AADD00]/30'
-                : 'bg-[#13131F] text-slate-500 border border-white/5 hover:text-slate-300'
+                ? 'bg-[#C6FF00]/15 text-[#C6FF00] border border-[#C6FF00]/30'
+                : 'bg-white/[0.04] text-slate-500 border border-white/5 hover:text-slate-300'
             }`}>
             {label}
-            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${filter === id ? 'bg-[#AADD00]/20' : 'bg-white/5'}`}>
+            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${filter === id ? 'bg-[#C6FF00]/20' : 'bg-white/5'}`}>
               {count}
             </span>
           </button>
@@ -349,7 +349,7 @@ function MembersTab() {
       {/* Member list */}
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <div className="w-5 h-5 border-2 border-[#AADD00]/20 border-t-[#AADD00] rounded-full animate-spin" />
+          <div className="w-5 h-5 border-2 border-[#C6FF00]/20 border-t-[#C6FF00] rounded-full animate-spin" />
         </div>
       ) : (
         <div className="flex flex-col gap-3">
@@ -359,19 +359,19 @@ function MembersTab() {
               ? new Date(m.last_payment).toLocaleDateString('es-AR', { month: 'short', year: 'numeric' })
               : null
             const statusCfg = {
-              active:   { color: 'text-[#AADD00]',  label: 'Al día'   },
+              active:   { color: 'text-[#C6FF00]',  label: 'Al día'   },
               moroso:   { color: 'text-yellow-400', label: 'Moroso'   },
               inactive: { color: 'text-slate-500',  label: 'Inactivo' },
             }[m.status] ?? { color: 'text-slate-400', label: m.status }
 
             return (
               <div key={m.id}
-                className="bg-[#13131F] border border-white/5 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center gap-4">
+                className="bg-[#0C1020] border border-white/[0.1] rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center gap-4">
 
                 {/* Avatar + info */}
                 <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div className="w-11 h-11 rounded-xl bg-[#AADD00]/10 flex items-center justify-center shrink-0">
-                    <span className="text-[#AADD00] text-sm font-bold">{initials}</span>
+                  <div className="w-11 h-11 rounded-xl bg-[#C6FF00]/10 flex items-center justify-center shrink-0">
+                    <span className="text-[#C6FF00] text-sm font-bold">{initials}</span>
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-white font-semibold text-sm truncate">{m.name}</p>
@@ -396,10 +396,10 @@ function MembersTab() {
                           onChange={e => { setWaInput(e.target.value); setWaError(null) }}
                           onKeyDown={e => { if (e.key === 'Enter') saveWaId(m.id); if (e.key === 'Escape') { setEditingWa(null); setWaError(null) } }}
                           placeholder="5492944123456"
-                          className="flex-1 min-w-0 bg-[#0A0A14] text-white rounded-xl px-3 py-2 text-xs border border-[#AADD00]/40 focus:outline-none"
+                          className="flex-1 min-w-0 bg-[#060810] text-white rounded-xl px-3 py-2 text-xs border border-[#C6FF00]/40 focus:outline-none"
                         />
                         <button onClick={() => saveWaId(m.id)}
-                          className="w-8 h-8 rounded-xl bg-[#AADD00]/15 text-[#AADD00] flex items-center justify-center text-xs font-bold hover:bg-[#AADD00]/25 transition-all shrink-0">
+                          className="w-8 h-8 rounded-xl bg-[#C6FF00]/15 text-[#C6FF00] flex items-center justify-center text-xs font-bold hover:bg-[#C6FF00]/25 transition-all shrink-0">
                           ✓
                         </button>
                         <button onClick={() => { setEditingWa(null); setWaError(null) }}
@@ -428,7 +428,7 @@ function MembersTab() {
                 {/* Status select */}
                 <div className="shrink-0">
                   <select value={m.status} onChange={e => updateStatus(m.id, e.target.value)}
-                    className={`bg-[#0A0A14] rounded-xl px-3 py-2 text-xs border border-white/5 font-semibold focus:outline-none cursor-pointer ${statusCfg.color}`}>
+                    className={`bg-[#060810] rounded-xl px-3 py-2 text-xs border border-white/5 font-semibold focus:outline-none cursor-pointer ${statusCfg.color}`}>
                     <option value="active">Al día</option>
                     <option value="moroso">Moroso</option>
                     <option value="inactive">Inactivo</option>
@@ -439,7 +439,7 @@ function MembersTab() {
           })}
 
           {filtered.length === 0 && !loading && (
-            <div className="bg-[#13131F] border border-white/5 rounded-2xl p-12 text-center">
+            <div className="bg-[#0C1020] border border-white/[0.1] rounded-2xl p-12 text-center">
               <p className="text-slate-500 text-sm">Sin miembros en esta categoría.</p>
             </div>
           )}
@@ -538,7 +538,7 @@ function BotTab() {
 
   if (loading) return (
     <div className="flex items-center justify-center py-20">
-      <div className="w-5 h-5 border-2 border-[#AADD00]/20 border-t-[#AADD00] rounded-full animate-spin" />
+      <div className="w-5 h-5 border-2 border-[#C6FF00]/20 border-t-[#C6FF00] rounded-full animate-spin" />
     </div>
   )
 
@@ -546,17 +546,17 @@ function BotTab() {
     <div className="flex flex-col gap-6">
 
       {/* Bot status bar */}
-      <div className="bg-[#13131F] border border-[#AADD00]/15 rounded-2xl p-4 sm:p-5">
+      <div className="bg-[#0C1020] border border-[#C6FF00]/20 rounded-2xl p-4 sm:p-5">
         <div className="flex flex-col sm:flex-row sm:items-center gap-4">
           <div className="flex items-center gap-3 flex-1 min-w-0">
-            <div className="w-10 h-10 rounded-xl bg-[#AADD00]/10 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-[#C6FF00]/10 flex items-center justify-center shrink-0">
               <BotIcon size={18} />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <p className="text-[#AADD00] font-bold text-sm">Bot WhatsApp</p>
-                <span className="flex items-center gap-1 text-[10px] font-bold text-[#AADD00] bg-[#AADD00]/10 px-2 py-0.5 rounded-full">
-                  <span className="w-1 h-1 rounded-full bg-[#AADD00]" />ACTIVO
+                <p className="text-[#C6FF00] font-bold text-sm">Bot WhatsApp</p>
+                <span className="flex items-center gap-1 text-[10px] font-bold text-[#C6FF00] bg-[#C6FF00]/10 px-2 py-0.5 rounded-full">
+                  <span className="w-1 h-1 rounded-full bg-[#C6FF00]" />ACTIVO
                 </span>
               </div>
               <p className="text-slate-500 text-xs mt-0.5">
@@ -570,7 +570,7 @@ function BotTab() {
             {[
               { label: 'Pendientes', value: payments.length,         color: payments.length  ? 'text-yellow-400' : 'text-slate-500' },
               { label: 'Morosos',    value: morosos.length,          color: morosos.length   ? 'text-red-400'    : 'text-slate-500' },
-              { label: 'WA linked',  value: `${withWa}/${activeCount}`, color: withWa === activeCount ? 'text-[#AADD00]' : 'text-slate-400' },
+              { label: 'WA linked',  value: `${withWa}/${activeCount}`, color: withWa === activeCount ? 'text-[#C6FF00]' : 'text-slate-400' },
             ].map(({ label, value, color }) => (
               <div key={label} className="text-center min-w-[50px]">
                 <p className={`text-xl font-black ${color}`}>{value}</p>
@@ -587,13 +587,13 @@ function BotTab() {
           <button key={id} onClick={() => setSection(id)}
             className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap shrink-0 transition-all ${
               section === id
-                ? 'bg-[#AADD00]/15 text-[#AADD00] border border-[#AADD00]/30'
-                : 'bg-[#13131F] text-slate-500 border border-white/5 hover:text-slate-300'
+                ? 'bg-[#C6FF00]/15 text-[#C6FF00] border border-[#C6FF00]/30'
+                : 'bg-white/[0.04] text-slate-500 border border-white/5 hover:text-slate-300'
             }`}>
             {label}
             {count != null && count > 0 && (
               <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full ${
-                section === id ? 'bg-[#AADD00]/20' : 'bg-red-500/20 text-red-400'
+                section === id ? 'bg-[#C6FF00]/20' : 'bg-red-500/20 text-red-400'
               }`}>{count}</span>
             )}
           </button>
@@ -604,8 +604,8 @@ function BotTab() {
       {section === 'pagos' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {payments.length === 0 ? (
-            <div className="md:col-span-2 bg-[#13131F] border border-white/5 rounded-2xl p-12 text-center">
-              <p className="text-[#AADD00] text-2xl mb-2">✓</p>
+            <div className="md:col-span-2 bg-[#0C1020] border border-white/[0.1] rounded-2xl p-12 text-center">
+              <p className="text-[#C6FF00] text-2xl mb-2">✓</p>
               <p className="text-slate-400 text-sm font-semibold">Sin comprobantes pendientes</p>
               <p className="text-slate-600 text-xs mt-1.5">El bot registra aquí cuando un miembro envía un comprobante por WA.</p>
             </div>
@@ -614,7 +614,7 @@ function BotTab() {
             const ts       = new Date(p.created_at).toLocaleDateString('es-AR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 
             return (
-              <div key={p.id} className="bg-[#13131F] border border-white/5 rounded-2xl p-5 flex flex-col gap-4">
+              <div key={p.id} className="bg-[#0C1020] border border-white/[0.1] rounded-2xl p-5 flex flex-col gap-4">
                 {/* Header */}
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 rounded-xl bg-yellow-400/10 flex items-center justify-center shrink-0">
@@ -627,7 +627,7 @@ function BotTab() {
                         Pendiente
                       </span>
                     </div>
-                    <p className="text-[#AADD00] font-black text-2xl mt-0.5">
+                    <p className="text-[#C6FF00] font-black text-2xl mt-0.5">
                       ${p.amount?.toLocaleString('es-AR')}
                     </p>
                     {p.proof_text && (
@@ -640,7 +640,7 @@ function BotTab() {
                 {/* Actions */}
                 <div className="flex gap-2">
                   <button onClick={() => approvePayment(p)} disabled={!!acting[p.id]}
-                    className="flex-1 bg-[#AADD00] text-black rounded-xl py-2.5 text-sm font-bold active:scale-95 transition-all disabled:opacity-50 hover:bg-[#c4f01a]">
+                    className="flex-1 bg-[#C6FF00] text-black rounded-xl py-2.5 text-sm font-bold active:scale-95 transition-all disabled:opacity-50 hover:bg-[#c4f01a]">
                     {acting[p.id] === 'approving' ? 'Aprobando…' : '✓ Aprobar'}
                   </button>
                   <button onClick={() => rejectPayment(p.id)} disabled={!!acting[p.id]}
@@ -670,8 +670,8 @@ function BotTab() {
           </div>
 
           {morosos.length === 0 ? (
-            <div className="bg-[#13131F] border border-white/5 rounded-2xl p-12 text-center">
-              <p className="text-[#AADD00] text-2xl mb-2">✓</p>
+            <div className="bg-[#0C1020] border border-white/[0.1] rounded-2xl p-12 text-center">
+              <p className="text-[#C6FF00] text-2xl mb-2">✓</p>
               <p className="text-slate-400 font-semibold text-sm">Sin morosos este mes</p>
             </div>
           ) : (
@@ -682,7 +682,7 @@ function BotTab() {
                   ? new Date(m.last_payment).toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })
                   : 'Sin registro'
                 return (
-                  <div key={m.id} className="bg-[#13131F] border border-yellow-500/10 rounded-2xl p-4 flex items-center gap-3">
+                  <div key={m.id} className="bg-[#0C1020] border border-yellow-500/15 rounded-2xl p-4 flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-yellow-400/10 flex items-center justify-center shrink-0">
                       <span className="text-yellow-400 text-xs font-bold">{initials}</span>
                     </div>
@@ -707,7 +707,7 @@ function BotTab() {
       {section === 'asistencia' && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {activeSessions.length === 0 ? (
-            <div className="sm:col-span-2 lg:col-span-3 bg-[#13131F] border border-white/5 rounded-2xl p-12 text-center">
+            <div className="sm:col-span-2 lg:col-span-3 bg-[#0C1020] border border-white/[0.1] rounded-2xl p-12 text-center">
               <p className="text-slate-500 text-sm">Sin sesiones publicadas esta semana.</p>
             </div>
           ) : activeSessions.map(s => {
@@ -717,7 +717,7 @@ function BotTab() {
             try { badge = JSON.parse(s.description)?.badge } catch {}
 
             return (
-              <div key={s.id} className="bg-[#13131F] border border-white/5 rounded-2xl p-4 flex flex-col gap-3">
+              <div key={s.id} className="bg-[#0C1020] border border-white/[0.1] rounded-2xl p-4 flex flex-col gap-3">
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <p className="text-white font-bold text-sm">{s.day}</p>
@@ -725,13 +725,13 @@ function BotTab() {
                     {s.time && <p className="text-slate-600 text-[10px]">{s.time}</p>}
                   </div>
                   <div className="text-right">
-                    <p className="text-[#AADD00] font-black text-2xl leading-none">{count}</p>
+                    <p className="text-[#C6FF00] font-black text-2xl leading-none">{count}</p>
                     <p className="text-slate-600 text-[10px] mt-1">confirmados</p>
                   </div>
                 </div>
                 <div>
                   <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                    <div className="h-full bg-[#AADD00] rounded-full transition-all" style={{ width: `${pct}%` }} />
+                    <div className="h-full bg-[#C6FF00] rounded-full transition-all" style={{ width: `${pct}%` }} />
                   </div>
                   <p className="text-slate-600 text-[10px] mt-1.5 text-right">{pct}% del equipo</p>
                 </div>
@@ -744,7 +744,7 @@ function BotTab() {
       {/* ── Broadcast ── */}
       {section === 'broadcast' && (
         <div className="flex flex-col gap-5 max-w-lg">
-          <div className="bg-[#13131F] border border-white/5 rounded-2xl p-5 flex flex-col gap-4">
+          <div className="bg-[#0C1020] border border-white/[0.1] rounded-2xl p-5 flex flex-col gap-4">
             <div>
               <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-0.5">Mensaje masivo</p>
               <p className="text-slate-600 text-xs">
@@ -752,9 +752,9 @@ function BotTab() {
               </p>
             </div>
 
-            <div className="bg-[#0A0A14] border border-white/5 rounded-xl p-3 text-xs text-slate-500 leading-relaxed">
+            <div className="bg-[#060810] border border-white/5 rounded-xl p-3 text-xs text-slate-500 leading-relaxed">
               <p className="text-slate-400 font-semibold mb-1">Miembros con WA vinculado:</p>
-              <p className="text-[#AADD00] font-black text-xl">{withWa}</p>
+              <p className="text-[#C6FF00] font-black text-xl">{withWa}</p>
               <p className="text-slate-600">de {activeCount} activos recibirán el mensaje</p>
             </div>
 
@@ -763,7 +763,7 @@ function BotTab() {
               onChange={e => setBroadcast(e.target.value)}
               placeholder={`Hola equipo BTRT 🏃\n\nEscribí tu mensaje acá...`}
               rows={5}
-              className="w-full bg-[#0A0A14] text-white rounded-xl px-4 py-3 text-sm border border-white/5 placeholder-slate-600 resize-none focus:outline-none focus:border-[#AADD00]/40 leading-relaxed"
+              className="w-full bg-[#060810] text-white rounded-xl px-4 py-3 text-sm border border-white/5 placeholder-slate-600 resize-none focus:outline-none focus:border-[#C6FF00]/40 leading-relaxed"
             />
 
             <div className="flex gap-2">
@@ -771,18 +771,18 @@ function BotTab() {
                 className={`flex-1 rounded-xl py-3 text-sm font-bold transition-all active:scale-[0.98] ${
                   bcastSent
                     ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                    : 'bg-[#AADD00] text-black hover:bg-[#c4f01a] disabled:opacity-40 disabled:cursor-not-allowed'
+                    : 'bg-[#C6FF00] text-black hover:bg-[#c4f01a] disabled:opacity-40 disabled:cursor-not-allowed'
                 }`}>
                 {bcastSent ? '✓ Copiado al portapapeles' : 'Copiar mensaje'}
               </button>
             </div>
 
-            <div className="bg-[#AADD00]/5 border border-[#AADD00]/15 rounded-xl p-3">
+            <div className="bg-[#C6FF00]/5 border border-[#C6FF00]/15 rounded-xl p-3">
               <p className="text-slate-400 text-xs font-semibold mb-1">Cómo enviar:</p>
               <p className="text-slate-500 text-xs leading-relaxed">
                 1. Copiá el mensaje de arriba<br />
                 2. Abrí WhatsApp y hablale al bot<br />
-                3. Escribí <span className="font-mono text-[#AADD00]">/broadcast</span> y pegá el mensaje<br />
+                3. Escribí <span className="font-mono text-[#C6FF00]">/broadcast</span> y pegá el mensaje<br />
                 4. El bot lo enviará a los {withWa} miembros vinculados
               </p>
             </div>

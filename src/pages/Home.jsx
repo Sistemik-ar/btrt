@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 import WeekSchedule from '../components/WeekSchedule'
+import { CreditCard, Calendar, Trophy, ArrowRight } from 'lucide-react'
 
 const DAY_ORDER = ['Lunes','Martes','Miércoles','Miércoles/Jueves','Jueves','Viernes','Sábado','Domingo']
 
@@ -25,7 +26,6 @@ export default function Home() {
     setLoading(false)
   }
 
-  const firstName    = profile?.name?.split(' ')[0] || 'corredor'
   const sessionCount = currentWeek?.sessions?.length ?? 0
   const nextSession  = currentWeek?.sessions?.slice().sort(
     (a, b) => DAY_ORDER.indexOf(a.day) - DAY_ORDER.indexOf(b.day)
@@ -57,40 +57,40 @@ export default function Home() {
         </div>
         <Link
           to="/buscar"
-          className="hidden sm:flex items-center gap-2 bg-[#AADD00] text-black font-bold text-sm px-5 py-2.5 rounded-xl hover:bg-[#c4f01a] active:scale-95 transition-all shrink-0 mt-1"
+          className="hidden sm:flex items-center gap-2 bg-[#C6FF00] text-black font-bold text-sm px-5 py-2.5 rounded-xl hover:bg-[#d4ff33] active:scale-95 transition-all shrink-0 mt-1"
         >
-          <SearchIcon /> Ver resultados
+          <ArrowRight size={15} /> Ver resultados
         </Link>
       </div>
 
       {/* ── Stat cards ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
 
         <DashCard
           label="Estado de pago"
           value={payStatus}
           sub={lastPayment ? `Último: ${lastPayment}` : 'Sin registro'}
           accent={payAccent}
-          icon={<CardIcon />}
+          icon={<CreditCard size={16} />}
           spark={[30, 45, 35, 50, 40, 55, 45]}
         />
 
         <DashCard
-          label="Sesiones esta semana"
+          label="Sesiones semana"
           value={loading ? '—' : String(sessionCount)}
           sub={nextSession ? `Próxima: ${nextSession.day}` : 'Sin sesiones aún'}
           accent="brand"
-          icon={<CalIcon />}
+          icon={<Calendar size={16} />}
           spark={[20, 40, 30, 60, 45, 70, 55]}
         />
 
-        <Link to="/buscar" className="block">
+        <Link to="/buscar" className="col-span-2 sm:col-span-1 block">
           <DashCard
             label="Mis resultados"
             value="Explorar"
             sub="Cronometraje Instantáneo"
             accent="brand"
-            icon={<TrophyIcon />}
+            icon={<Trophy size={16} />}
             spark={[15, 35, 25, 45, 55, 50, 65]}
             cta
           />
@@ -110,8 +110,8 @@ export default function Home() {
             </p>
           </div>
           {currentWeek && (
-            <span className="flex items-center gap-1.5 text-[#AADD00] text-xs font-bold bg-[#AADD00]/10 border border-[#AADD00]/20 px-3 py-1.5 rounded-full whitespace-nowrap">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#AADD00] animate-pulse" />
+            <span className="flex items-center gap-1.5 text-[#C6FF00] text-xs font-bold bg-[#C6FF00]/10 border border-[#C6FF00]/20 px-3 py-1.5 rounded-full whitespace-nowrap">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#C6FF00] animate-pulse" />
               Publicada
             </span>
           )}
@@ -119,14 +119,14 @@ export default function Home() {
 
         {loading ? (
           <div className="flex items-center justify-center py-24">
-            <div className="w-6 h-6 border-2 border-[#AADD00]/20 border-t-[#AADD00] rounded-full animate-spin" />
+            <div className="w-6 h-6 border-2 border-[#C6FF00]/20 border-t-[#C6FF00] rounded-full animate-spin" />
           </div>
         ) : currentWeek ? (
           <WeekSchedule week={currentWeek} />
         ) : (
-          <div className="bg-[#0D1117] border border-white/[0.06] rounded-2xl flex flex-col items-center justify-center py-16 text-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-[#AADD00]/[0.07] border border-[#AADD00]/10 flex items-center justify-center">
-              <CalIcon size={24} className="text-[#AADD00]/40" />
+          <div className="bg-[#090D1C] border border-white/[0.1] rounded-2xl flex flex-col items-center justify-center py-16 text-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-[#C6FF00]/[0.07] border border-[#C6FF00]/10 flex items-center justify-center">
+              <Calendar size={24} className="text-[#C6FF00]/40" />
             </div>
             <div>
               <p className="text-white font-semibold">Sin planificación esta semana</p>
@@ -141,7 +141,7 @@ export default function Home() {
 
 /* ── Dashboard card ── */
 const ACCENT = {
-  brand:   { icon: 'bg-[#AADD00]/15 text-[#AADD00]',    val: 'text-[#AADD00]',    spark: '#AADD00' },
+  brand:   { icon: 'bg-[#C6FF00]/15 text-[#C6FF00]',    val: 'text-[#C6FF00]',    spark: '#C6FF00' },
   emerald: { icon: 'bg-emerald-500/15 text-emerald-400', val: 'text-emerald-400',  spark: '#34d399' },
   yellow:  { icon: 'bg-yellow-400/15 text-yellow-400',   val: 'text-yellow-400',   spark: '#facc15' },
   slate:   { icon: 'bg-slate-500/15 text-slate-400',     val: 'text-slate-300',    spark: '#94a3b8' },
@@ -150,7 +150,6 @@ const ACCENT = {
 function DashCard({ label, value, sub, accent = 'brand', icon, spark = [], cta }) {
   const a = ACCENT[accent] ?? ACCENT.brand
 
-  // Normalize spark to 0-100 range
   const min = Math.min(...spark)
   const max = Math.max(...spark)
   const norm = spark.map(v => max === min ? 50 : ((v - min) / (max - min)) * 60 + 10)
@@ -159,44 +158,34 @@ function DashCard({ label, value, sub, accent = 'brand', icon, spark = [], cta }
   const pts  = norm.map((v, i) => `${i * step},${h - v * (h / 100)}`).join(' ')
 
   return (
-    <div className={`bg-[#0D1117] border border-white/[0.06] rounded-2xl p-5 flex flex-col gap-4 h-full
-      ${cta ? 'hover:border-[#AADD00]/20 hover:bg-[#111827] transition-all cursor-pointer group' : ''}`}>
+    <div className={`bg-[#0C1020] border border-white/[0.1] rounded-2xl p-4 sm:p-5 flex flex-col gap-3 sm:gap-4 h-full transition-all shadow-md shadow-black/40
+      ${cta ? 'hover:border-[#C6FF00]/30 hover:bg-[#101528] cursor-pointer group' : 'hover:border-white/[0.15]'}`}>
 
       {/* Top row: label + icon */}
       <div className="flex items-start justify-between gap-2">
-        <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest leading-snug">{label}</p>
-        <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${a.icon}`}>
+        <p className="text-slate-500 text-[10px] sm:text-xs font-semibold uppercase tracking-wider leading-snug">{label}</p>
+        <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shrink-0 ${a.icon}`}>
           {icon}
         </div>
       </div>
 
       {/* Value */}
       <div>
-        <p className={`text-4xl font-black tracking-tight leading-none ${a.val}`}>{value}</p>
-        {sub && <p className="text-slate-500 text-xs mt-2 leading-snug">{sub}</p>}
+        <p className={`text-3xl sm:text-4xl font-black tracking-tight leading-none ${a.val}`}>{value}</p>
+        {sub && <p className="text-slate-500 text-[10px] sm:text-xs mt-1.5 leading-snug">{sub}</p>}
       </div>
 
       {/* Sparkline */}
       <div className="mt-auto">
-        <svg width="100%" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="h-8 opacity-60">
+        <svg width="100%" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="h-5 sm:h-8 opacity-40">
           <defs>
             <linearGradient id={`sg-${label}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={a.spark} stopOpacity="0.3"/>
+              <stop offset="0%" stopColor={a.spark} stopOpacity="0.4"/>
               <stop offset="100%" stopColor={a.spark} stopOpacity="0"/>
             </linearGradient>
           </defs>
-          <polyline
-            points={pts}
-            fill="none"
-            stroke={a.spark}
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <polygon
-            points={`0,${h} ${pts} ${w},${h}`}
-            fill={`url(#sg-${label})`}
-          />
+          <polyline points={pts} fill="none" stroke={a.spark} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          <polygon points={`0,${h} ${pts} ${w},${h}`} fill={`url(#sg-${label})`}/>
         </svg>
         {cta && (
           <p className={`text-xs font-bold mt-1 group-hover:translate-x-1 transition-transform ${a.val}`}>
@@ -206,18 +195,4 @@ function DashCard({ label, value, sub, accent = 'brand', icon, spark = [], cta }
       </div>
     </div>
   )
-}
-
-/* ── Icons ── */
-function CardIcon() {
-  return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
-}
-function CalIcon({ size = 16, className = '' }) {
-  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-}
-function TrophyIcon() {
-  return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4a2 2 0 0 1-2-2V5h4"/><path d="M18 9h2a2 2 0 0 0 2-2V5h-4"/><path d="M12 17v4"/><path d="M8 21h8"/><path d="M6 5h12v6a6 6 0 0 1-12 0V5z"/></svg>
-}
-function SearchIcon() {
-  return <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
 }

@@ -5,8 +5,8 @@ import {
 } from 'recharts'
 import { decodeHTML, titleCase, formatTime, parseTimeToMinutes, formatMinutesShort, percentile, parseDistance, formatPace } from '../lib/format'
 
-const BRAND  = '#AADD00'
-const BRAND2 = '#7aaa00'
+const BRAND  = '#C6FF00'
+const BRAND2 = '#8ecc00'
 
 export default function RaceStats({ results }) {
   const runnerName = titleCase(results[0]?.nombre ?? '')
@@ -62,9 +62,9 @@ export default function RaceStats({ results }) {
 
       {/* ── Runner header ── */}
       {runnerName && (
-        <div className="flex items-end gap-4 pb-1 border-b border-white/5">
-          <div className="w-12 h-12 rounded-2xl bg-[#AADD00]/10 border border-[#AADD00]/20 flex items-center justify-center shrink-0">
-            <span className="text-[#AADD00] font-black text-lg leading-none">
+        <div className="flex items-end gap-4 pb-1 border-b border-white/[0.07]">
+          <div className="w-12 h-12 rounded-2xl bg-[#C6FF00]/10 border border-[#C6FF00]/20 flex items-center justify-center shrink-0">
+            <span className="text-[#C6FF00] font-black text-lg leading-none">
               {runnerName.charAt(0)}
             </span>
           </div>
@@ -223,14 +223,14 @@ export default function RaceStats({ results }) {
 /* ── Summary card ── */
 function SummaryCard({ icon, label, value, accent, sub }) {
   const styles = {
-    brand: { iconBg: 'bg-[#AADD00]/15', iconText: 'text-[#AADD00]', val: 'text-[#AADD00]' },
+    brand: { iconBg: 'bg-[#C6FF00]/15', iconText: 'text-[#C6FF00]', val: 'text-[#C6FF00]' },
     white: { iconBg: 'bg-white/8',       iconText: 'text-white',       val: 'text-white'     },
     dim:   { iconBg: 'bg-white/5',       iconText: 'text-slate-400',   val: 'text-slate-300' },
   }
   const s = styles[accent] ?? styles.dim
 
   return (
-    <div className="bg-[#13131F] border border-white/5 rounded-2xl p-4 flex flex-col gap-3">
+    <div className="bg-[#0C1020] border border-white/[0.1] rounded-2xl p-4 flex flex-col gap-3 shadow-md shadow-black/30">
       <div className="flex items-center gap-2.5">
         <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${s.iconBg} ${s.iconText}`}>
           {icon}
@@ -246,7 +246,7 @@ function SummaryCard({ icon, label, value, accent, sub }) {
 /* ── Chart card ── */
 function ChartCard({ title, subtitle, children }) {
   return (
-    <div className="bg-[#13131F] border border-white/5 rounded-2xl p-5">
+    <div className="bg-[#0C1020] border border-white/[0.1] rounded-2xl p-5 shadow-md shadow-black/30">
       <div className="mb-4">
         <p className="text-white text-sm font-semibold">{title}</p>
         {subtitle && <p className="text-slate-500 text-xs mt-0.5">{subtitle}</p>}
@@ -261,10 +261,10 @@ function PctTooltip({ active, payload }) {
   if (!active || !payload?.length) return null
   const d = payload[0].payload
   return (
-    <div className="bg-[#1a1a2e] border border-white/10 rounded-xl p-3 text-xs shadow-xl max-w-[200px]">
+    <div className="bg-[#0C1020] border border-white/[0.15] rounded-xl p-3 text-xs shadow-xl max-w-[200px]">
       <p className="text-white font-semibold truncate">{d.evento}</p>
       {d.carrera && <p className="text-slate-400 mt-0.5 truncate">{d.carrera}</p>}
-      <p className="text-[#AADD00] font-bold mt-2">
+      <p className="text-[#C6FF00] font-bold mt-2">
         Top {d.pct}% · #{d.pos}/{d.total}
       </p>
     </div>
@@ -275,10 +275,10 @@ function TimeTooltip({ active, payload }) {
   if (!active || !payload?.length) return null
   const d = payload[0].payload
   return (
-    <div className="bg-[#1a1a2e] border border-white/10 rounded-xl p-3 text-xs shadow-xl max-w-[200px]">
+    <div className="bg-[#0C1020] border border-white/[0.15] rounded-xl p-3 text-xs shadow-xl max-w-[200px]">
       <p className="text-white font-semibold truncate">{d.evento}</p>
       {d.carrera && <p className="text-slate-400 mt-0.5 truncate">{d.carrera}</p>}
-      <p className="text-[#AADD00] font-bold mt-2 tabular-nums">{d.tiempo}</p>
+      <p className="text-[#C6FF00] font-bold mt-2 tabular-nums">{d.tiempo}</p>
     </div>
   )
 }
@@ -295,7 +295,7 @@ function PaceTooltip({ active, payload, bestPace }) {
       <div className="flex items-center gap-3 mt-2">
         <div>
           <p className="text-slate-500 text-[10px] uppercase tracking-wider">Pace</p>
-          <p className={`font-bold tabular-nums ${isBest ? 'text-[#AADD00]' : 'text-white'}`}>
+          <p className={`font-bold tabular-nums ${isBest ? 'text-[#C6FF00]' : 'text-white'}`}>
             {formatPace(d.pace)}
           </p>
         </div>
@@ -328,7 +328,7 @@ function RaceRow({ result, index, bestMins }) {
   const isBest  = bestMins != null && mins === bestMins
 
   return (
-    <div className="bg-[#13131F] border border-white/5 rounded-2xl p-4 grid grid-cols-[auto_1fr_auto] gap-3 items-start">
+    <div className="bg-[#0C1020] border border-white/[0.1] rounded-2xl p-4 grid grid-cols-[auto_1fr_auto] gap-3 items-start">
       {/* Index */}
       <div className="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center shrink-0 mt-0.5">
         <span className="text-slate-500 text-xs font-bold">{index}</span>
@@ -343,7 +343,7 @@ function RaceRow({ result, index, bestMins }) {
           {fecha && <span className="text-slate-500 text-xs">{fecha}</span>}
           {evento?.localidad && <span className="text-slate-600 text-xs">· {evento.localidad}</span>}
           {result.carrera && (
-            <span className="text-[#AADD00]/50 text-xs">· {decodeHTML(result.carrera)}</span>
+            <span className="text-[#C6FF00]/50 text-xs">· {decodeHTML(result.carrera)}</span>
           )}
         </div>
       </div>
@@ -352,13 +352,13 @@ function RaceRow({ result, index, bestMins }) {
       <div className="flex flex-col items-end gap-1 shrink-0 w-28">
         {result.pos_general && (
           <span className={`text-xs font-bold px-2 py-0.5 rounded-lg ${
-            isBest ? 'bg-[#AADD00]/20 text-[#AADD00]' : 'bg-white/5 text-slate-300'
+            isBest ? 'bg-[#C6FF00]/20 text-[#C6FF00]' : 'bg-white/5 text-slate-300'
           }`}>
             #{result.pos_general}
           </span>
         )}
         {pct != null && (
-          <p className={`text-xs font-semibold ${isBest ? 'text-[#AADD00]' : 'text-slate-500'}`}>
+          <p className={`text-xs font-semibold ${isBest ? 'text-[#C6FF00]' : 'text-slate-500'}`}>
             top {pct}%
           </p>
         )}
@@ -366,7 +366,7 @@ function RaceRow({ result, index, bestMins }) {
           <p className="text-slate-400 text-xs tabular-nums">{tiempo}</p>
         )}
         {pace != null && (
-          <p className={`text-[10px] tabular-nums font-semibold ${isBest ? 'text-[#AADD00]/70' : 'text-slate-600'}`}>
+          <p className={`text-[10px] tabular-nums font-semibold ${isBest ? 'text-[#C6FF00]/70' : 'text-slate-600'}`}>
             {formatPace(pace)}
           </p>
         )}

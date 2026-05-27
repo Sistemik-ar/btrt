@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { decodeHTML, titleCase, formatTime } from '../lib/format'
 import RaceStats from '../components/RaceStats'
+import { Search as SearchIcon, BarChart2, MapPin, Calendar, Check } from 'lucide-react'
 
 export default function Search() {
   const [query, setQuery] = useState('')
@@ -31,10 +32,9 @@ export default function Search() {
           .select(`*, eventos(nombre, fecha, localidad, pais, deporte, participant_count)`)
           .order('id', { ascending: false })
           .limit(100)
-        // bug del scraper: el nombre del corredor está en columna `dorsal`
+        // scraper bug: runner name is in `dorsal` column, race category in `nombre`
         parts.forEach(part => { q = q.ilike('dorsal', `%${part}%`) })
         const { data: rows, error } = await q
-        // bug del scraper: nombre del corredor está en `dorsal`, categoría en `nombre`
         data = error ? [] : (rows || []).map(r => ({
           ...r,
           nombre: r.dorsal,
@@ -71,19 +71,22 @@ export default function Search() {
 
       {/* Search bar */}
       <div className="flex gap-3">
-        <input
-          type="text"
-          placeholder="Rodrigo Florido"
-          value={query}
-          onChange={e => setQuery(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && search()}
-          autoFocus
-          className="flex-1 bg-white/5 text-white rounded-2xl px-5 py-4 text-sm border border-white/10 placeholder-slate-600 focus:outline-none focus:border-[#AADD00]/40 focus:bg-white/8 transition-all"
-        />
+        <div className="flex-1 flex items-center gap-3 bg-[#0C1020] border border-white/[0.12] rounded-2xl px-4 focus-within:border-[#C6FF00]/50 transition-all">
+          <SearchIcon size={15} className="text-slate-500 shrink-0" />
+          <input
+            type="text"
+            placeholder="Rodrigo Florido"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && search()}
+            autoFocus
+            className="flex-1 bg-transparent text-white py-4 text-sm placeholder-slate-600 focus:outline-none"
+          />
+        </div>
         <button
           onClick={search}
           disabled={loading || !query.trim()}
-          className="bg-[#AADD00] text-black rounded-2xl px-6 py-4 text-sm font-black active:scale-95 transition-all disabled:opacity-30 min-w-[90px]"
+          className="bg-[#C6FF00] text-black rounded-2xl px-6 py-4 text-sm font-black active:scale-95 transition-all disabled:opacity-40 min-w-[90px]"
         >
           {loading ? <Spinner /> : 'Buscar'}
         </button>
@@ -107,13 +110,13 @@ export default function Search() {
               <div className="flex gap-2">
                 <button
                   onClick={() => setSelected(new Set(results.map(r => r.id)))}
-                  className="px-4 py-2 rounded-xl bg-[#AADD00]/15 text-[#AADD00] text-xs font-bold border border-[#AADD00]/30 hover:bg-[#AADD00]/25 transition-all"
+                  className="px-4 py-2 rounded-xl bg-[#C6FF00]/15 text-[#C6FF00] text-xs font-bold border border-[#C6FF00]/30 hover:bg-[#C6FF00]/25 transition-all"
                 >
                   Todos
                 </button>
                 <button
                   onClick={() => setSelected(new Set())}
-                  className="px-4 py-2 rounded-xl bg-white/5 text-slate-400 text-xs font-semibold border border-white/10 hover:text-white hover:bg-white/10 transition-all"
+                  className="px-4 py-2 rounded-xl bg-white/[0.05] text-slate-400 text-xs font-semibold border border-white/[0.08] hover:text-white hover:bg-white/10 transition-all"
                 >
                   Ninguno
                 </button>
@@ -125,9 +128,9 @@ export default function Search() {
           {selected.size > 0 && (
             <button
               onClick={() => setShowStats(true)}
-              className="w-full bg-[#AADD00] text-black rounded-2xl py-4 font-black text-sm active:scale-[0.98] transition-all shadow-lg shadow-[#AADD00]/20 flex items-center justify-center gap-2"
+              className="w-full bg-[#C6FF00] text-black rounded-2xl py-4 font-black text-sm active:scale-[0.98] transition-all shadow-lg shadow-[#C6FF00]/20 flex items-center justify-center gap-2"
             >
-              <ChartIcon />
+              <BarChart2 size={15} />
               Ver estadísticas · {selected.size} carrera{selected.size !== 1 ? 's' : ''}
             </button>
           )}
@@ -166,7 +169,7 @@ export default function Search() {
 function sportStyle(deporte) {
   const d = (deporte ?? '').toLowerCase()
   if (d.includes('trail') || d.includes('mountain'))
-    return { bg: 'bg-[#AADD00]/15', text: 'text-[#AADD00]', border: 'border-[#AADD00]/20' }
+    return { bg: 'bg-[#C6FF00]/15', text: 'text-[#C6FF00]', border: 'border-[#C6FF00]/20' }
   if (d.includes('ruta') || d.includes('road') || d.includes('maraton'))
     return { bg: 'bg-blue-500/15', text: 'text-blue-400', border: 'border-blue-500/20' }
   if (d.includes('ultra'))
@@ -191,30 +194,30 @@ function ResultCard({ result, selected, onToggle }) {
       tabIndex={0}
       onClick={onToggle}
       onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && onToggle()}
-      className={`rounded-2xl p-5 flex items-center gap-4 border transition-all cursor-pointer select-none ${
+      className={`rounded-2xl p-5 flex items-center gap-4 border transition-all cursor-pointer select-none shadow-sm shadow-black/30 ${
         selected
-          ? 'bg-[#AADD00]/[0.06] border-[#AADD00]/25 shadow-sm shadow-[#AADD00]/10'
-          : 'bg-[#13131F] border-white/5 hover:border-white/15 hover:bg-white/[0.04]'
+          ? 'bg-[#0D1A08] border-[#C6FF00]/35 shadow-[#C6FF00]/8'
+          : 'bg-[#0A0E1C] border-white/[0.1] hover:border-white/[0.18] hover:bg-[#0E1228]'
       }`}
     >
       {/* Sport icon */}
-      <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 border ${sport.bg} ${sport.border}`}>
+      <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 border pointer-events-none ${sport.bg} ${sport.border}`}>
         <RunIcon className={sport.text} />
       </div>
 
       {/* Main info */}
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 pointer-events-none">
         <p className="text-white font-bold text-sm leading-snug truncate">{eventoNombre}</p>
         <p className="text-slate-400 text-xs mt-0.5 truncate">{corredor}</p>
         <div className="flex items-center gap-2 mt-2 flex-wrap">
           {fecha && (
             <span className="flex items-center gap-1 text-slate-500 text-xs">
-              <CalIcon /> {fecha}
+              <Calendar size={10} /> {fecha}
             </span>
           )}
           {evento?.localidad && (
             <span className="flex items-center gap-1 text-slate-600 text-xs">
-              <PinIcon /> {evento.localidad}
+              <MapPin size={10} /> {evento.localidad}
             </span>
           )}
           {carrera && (
@@ -226,11 +229,11 @@ function ResultCard({ result, selected, onToggle }) {
       </div>
 
       {/* Right: position + time + checkbox */}
-      <div className="flex items-center gap-3 shrink-0">
+      <div className="flex items-center gap-3 shrink-0 pointer-events-none">
         <div className="text-right">
           {result.pos_general && (
             <span className={`inline-block text-xs font-black px-2.5 py-1 rounded-lg ${
-              selected ? 'bg-[#AADD00]/20 text-[#AADD00]' : 'bg-white/8 text-slate-300'
+              selected ? 'bg-[#C6FF00]/20 text-[#C6FF00]' : 'bg-white/8 text-slate-300'
             }`}>
               #{result.pos_general}
             </span>
@@ -242,13 +245,9 @@ function ResultCard({ result, selected, onToggle }) {
 
         {/* Checkbox */}
         <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
-          selected ? 'bg-[#AADD00] border-[#AADD00]' : 'border-slate-600 bg-transparent'
+          selected ? 'bg-[#C6FF00] border-[#C6FF00]' : 'border-slate-600 bg-transparent'
         }`}>
-          {selected && (
-            <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
-              <path d="M1 4L4 7L10 1" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          )}
+          {selected && <Check size={11} color="black" strokeWidth={3} />}
         </div>
       </div>
     </div>
@@ -264,34 +263,10 @@ function Spinner() {
   )
 }
 
-function RunIcon({ className = 'text-[#AADD00]' }) {
+function RunIcon({ className = '' }) {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className}>
       <circle cx="13" cy="4" r="1"/><path d="M7 21l3-7-2-3 4-4 2 4h4"/><path d="M13 12l-2 5"/>
-    </svg>
-  )
-}
-
-function CalIcon() {
-  return (
-    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
-    </svg>
-  )
-}
-
-function PinIcon() {
-  return (
-    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
-    </svg>
-  )
-}
-
-function ChartIcon() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/>
     </svg>
   )
 }

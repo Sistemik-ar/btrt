@@ -1,20 +1,21 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
+import { Check, Plus } from 'lucide-react'
 
 const DAY_ORDER = ['Lunes','Martes','Miércoles','Miércoles/Jueves','Jueves','Viernes','Sábado','Domingo']
 
 const BADGE = {
-  quality: { label: 'Calidad · Llano',    bg: 'bg-blue-500/10',   text: 'text-blue-400',   border: 'border border-blue-500/30'   },
-  hills:   { label: 'Cuestas · Terreno',  bg: 'bg-orange-500/10', text: 'text-orange-400', border: 'border border-orange-500/30' },
-  fondazo: { label: 'Fondo de Montaña',   bg: 'bg-[#AADD00]/10',  text: 'text-[#AADD00]',  border: 'border border-[#AADD00]/30'  },
-  rest:    { label: 'Recuperación',       bg: 'bg-white/5',       text: 'text-slate-500',  border: 'border border-white/5'       },
+  quality: { label: 'Calidad · Llano',    bg: 'bg-blue-500/10',    text: 'text-blue-400',   border: 'border border-blue-500/30'    },
+  hills:   { label: 'Cuestas · Terreno',  bg: 'bg-orange-500/10',  text: 'text-orange-400', border: 'border border-orange-500/30'  },
+  fondazo: { label: 'Fondo de Montaña',   bg: 'bg-[#C6FF00]/10',   text: 'text-[#C6FF00]',  border: 'border border-[#C6FF00]/30'   },
+  rest:    { label: 'Recuperación',       bg: 'bg-white/5',        text: 'text-slate-500',  border: 'border border-white/5'        },
 }
 
 const NIVEL_STYLE = {
-  ini: { bg: 'bg-blue-500/10',   text: 'text-blue-400',   border: 'border-blue-500/30'  },
-  med: { bg: 'bg-yellow-500/10', text: 'text-yellow-400', border: 'border-yellow-500/30'},
-  avz: { bg: 'bg-red-500/10',    text: 'text-red-400',    border: 'border-red-500/30'   },
+  ini: { bg: 'bg-blue-500/10',   text: 'text-blue-400',   border: 'border-blue-500/30'   },
+  med: { bg: 'bg-yellow-500/10', text: 'text-yellow-400', border: 'border-yellow-500/30' },
+  avz: { bg: 'bg-red-500/10',    text: 'text-red-400',    border: 'border-red-500/30'    },
 }
 
 function parseDesc(raw) {
@@ -80,13 +81,13 @@ function RichCard({ session, rich, confirmed, loading, onToggle }) {
   const isRest = rich.badge?.type === 'rest'
 
   return (
-    <div className={`rounded-2xl overflow-hidden border transition-colors ${
-      confirmed ? 'border-[#AADD00]/30 bg-[#AADD00]/[0.03]' : 'border-white/[0.07] bg-[#13131F]'
+    <div className={`rounded-2xl overflow-hidden border transition-colors shadow-md shadow-black/40 ${
+      confirmed ? 'border-[#C6FF00]/35 bg-[#0E1A08]' : 'border-white/[0.1] bg-[#0A0E1C]'
     }`}>
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
         <div className="flex items-center gap-3 min-w-0">
-          <h3 className="text-white font-bold text-base font-condensed tracking-wide uppercase">{session.day}</h3>
+          <h3 className="text-white font-bold text-base tracking-wide uppercase">{session.day}</h3>
           {rich.badge && (
             <span className={`text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-lg ${badge.bg} ${badge.text} ${badge.border}`}>
               {rich.badge.label ?? badge.label}
@@ -98,10 +99,10 @@ function RichCard({ session, rich, confirmed, loading, onToggle }) {
             onClick={onToggle}
             disabled={loading}
             className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all active:scale-90 disabled:opacity-40 ${
-              confirmed ? 'bg-[#AADD00] text-black' : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
+              confirmed ? 'bg-[#C6FF00] text-black' : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
             }`}
           >
-            {confirmed ? <CheckIcon size={12} /> : <PlusIcon size={12} />}
+            {confirmed ? <Check size={12} /> : <Plus size={12} />}
             {confirmed ? 'Confirmado' : 'Confirmar'}
           </button>
         )}
@@ -128,9 +129,9 @@ function RichCard({ session, rich, confirmed, loading, onToggle }) {
 
         {/* Meetpoint */}
         {session.location && (
-          <div className="flex items-start gap-2 bg-[#AADD00]/[0.06] border-l-2 border-[#AADD00] pl-3 py-1.5 rounded-r-xl">
-            <span className="text-[10px] text-[#AADD00] font-semibold uppercase tracking-wider mt-0.5">📍</span>
-            <p className="text-[#AADD00]/80 text-xs leading-snug">{session.location}</p>
+          <div className="flex items-start gap-2 bg-[#C6FF00]/[0.06] border-l-2 border-[#C6FF00] pl-3 py-1.5 rounded-r-xl">
+            <span className="text-[10px] text-[#C6FF00] font-semibold uppercase tracking-wider mt-0.5">📍</span>
+            <p className="text-[#C6FF00]/80 text-xs leading-snug">{session.location}</p>
           </div>
         )}
 
@@ -146,7 +147,7 @@ function RichCard({ session, rich, confirmed, loading, onToggle }) {
                   <button key={k} onClick={() => setTab(k)}
                     className={`text-[11px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg border transition-all ${
                       tab === k
-                        ? 'bg-[#AADD00] text-black border-[#AADD00]'
+                        ? 'bg-[#C6FF00] text-black border-[#C6FF00]'
                         : 'bg-transparent text-slate-500 border-white/10 hover:border-white/20 hover:text-slate-300'
                     }`}
                   >{l}</button>
@@ -158,13 +159,13 @@ function RichCard({ session, rich, confirmed, loading, onToggle }) {
             {tab === 'session' && (
               <div className="flex flex-col gap-3">
                 {rich.objective && (
-                  <p className="text-[#AADD00] text-sm font-medium leading-snug">{rich.objective}</p>
+                  <p className="text-[#C6FF00] text-sm font-medium leading-snug">{rich.objective}</p>
                 )}
                 {rich.activities?.length > 0 && (
                   <ul className="flex flex-col gap-1.5">
                     {rich.activities.map((a, i) => (
                       <li key={i} className="flex gap-2 items-start text-xs text-slate-400 leading-snug">
-                        <span className="text-[#AADD00] mt-0.5 shrink-0">›</span>
+                        <span className="text-[#C6FF00] mt-0.5 shrink-0">›</span>
                         {a}
                       </li>
                     ))}
@@ -178,8 +179,8 @@ function RichCard({ session, rich, confirmed, loading, onToggle }) {
                   </div>
                 )}
                 {rich.hbox && (
-                  <div className="border border-[#AADD00]/20 bg-[#AADD00]/5 rounded-xl p-3">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#AADD00] mb-1.5">{rich.hbox.title}</p>
+                  <div className="border border-[#C6FF00]/20 bg-[#C6FF00]/5 rounded-xl p-3">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#C6FF00] mb-1.5">{rich.hbox.title}</p>
                     <p className="text-xs text-slate-400 leading-relaxed">{rich.hbox.content}</p>
                   </div>
                 )}
@@ -209,7 +210,7 @@ function RichCard({ session, rich, confirmed, loading, onToggle }) {
         {rich.duration && (
           <div>
             <div className="h-px bg-white/5 rounded-full overflow-hidden">
-              <div className="h-full bg-[#AADD00]/50 rounded-full" style={{ width: `${rich.durationPct ?? 70}%` }} />
+              <div className="h-full bg-[#C6FF00]/50 rounded-full" style={{ width: `${rich.durationPct ?? 70}%` }} />
             </div>
             <p className="text-slate-600 text-[10px] text-right uppercase tracking-wider mt-1">{rich.duration}</p>
           </div>
@@ -222,11 +223,11 @@ function RichCard({ session, rich, confirmed, loading, onToggle }) {
 /* ── Simple card (plain text description) ─────────────────────────────────── */
 function SimpleCard({ session, confirmed, loading, onToggle }) {
   return (
-    <div className={`rounded-2xl p-4 flex items-center gap-4 border transition-all ${
-      confirmed ? 'border-[#AADD00]/25 bg-[#AADD00]/[0.04]' : 'border-white/[0.06] bg-[#13131F] hover:border-white/10'
+    <div className={`rounded-2xl p-4 flex items-center gap-4 border transition-all shadow-sm shadow-black/30 ${
+      confirmed ? 'border-[#C6FF00]/35 bg-[#0E1A08]' : 'border-white/[0.1] bg-[#0A0E1C] hover:border-white/[0.16]'
     }`}>
       <div className={`shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold ${
-        confirmed ? 'bg-[#AADD00]/15 text-[#AADD00]' : 'bg-white/5 text-slate-400'
+        confirmed ? 'bg-[#C6FF00]/15 text-[#C6FF00]' : 'bg-white/5 text-slate-400'
       }`}>{session.time}</div>
       <div className="flex-1 min-w-0">
         {session.location && <p className="text-slate-500 text-xs truncate mb-0.5">📍 {session.location}</p>}
@@ -234,17 +235,10 @@ function SimpleCard({ session, confirmed, loading, onToggle }) {
       </div>
       <button onClick={onToggle} disabled={loading}
         className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-90 disabled:opacity-40 ${
-          confirmed ? 'bg-[#AADD00] text-black' : 'bg-white/5 text-slate-500 hover:bg-white/10'
+          confirmed ? 'bg-[#C6FF00] text-black' : 'bg-white/5 text-slate-500 hover:bg-white/10'
         }`}>
-        {confirmed ? <CheckIcon /> : <PlusIcon />}
+        {confirmed ? <Check size={16} /> : <Plus size={16} />}
       </button>
     </div>
   )
-}
-
-function CheckIcon({ size = 16 }) {
-  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-}
-function PlusIcon({ size = 16 }) {
-  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
 }
