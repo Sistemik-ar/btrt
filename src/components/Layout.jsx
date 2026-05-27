@@ -3,12 +3,14 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/AuthContext'
 import { Home, Search, Settings2, LogOut, ChevronLeft, ChevronRight } from 'lucide-react'
 
-const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL
+const ADMIN_EMAILS = new Set(
+  (import.meta.env.VITE_ADMIN_EMAIL ?? '').split(',').map(e => e.trim()).filter(Boolean)
+)
 
 export default function Layout({ children }) {
   const { user, profile, signOut } = useAuth()
   const navigate  = useNavigate()
-  const isAdmin   = user?.email === ADMIN_EMAIL
+  const isAdmin   = ADMIN_EMAILS.has(user?.email)
   const [collapsed, setCollapsed] = useState(false)
 
   async function handleSignOut() {
