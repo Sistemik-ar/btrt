@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { loadWeek, saveWeek, deleteWeek } from '../lib/data'
+import { planToCsv, csvToActivities, downloadText } from '../lib/planCsv'
+import { broadcastNotification } from '../lib/push'
 import RocoWeekPlan, { DAY_KEYS, DAY_NAME, DAY_ABBREV } from './RocoWeekPlan'
-import { Plus, Trash2, Eye, Save, AlertTriangle, Calendar } from 'lucide-react'
+import { Plus, Trash2, Eye, Save, AlertTriangle, Calendar, FileDown, FileUp, Printer } from 'lucide-react'
 
 /* ── Helpers ─────────────────────────────────────────────────────────────── */
 
@@ -195,6 +197,7 @@ export default function PlanEditor() {
   const [preview, setPreview] = useState(false)
   const [activeDay, setActiveDay] = useState('lun')
   const [error, setError]     = useState(null)
+  const fileRef = useRef(null)
 
   useEffect(() => {
     setSavedInfo(null)
@@ -239,6 +242,17 @@ export default function PlanEditor() {
       const res = await saveWeek(weekId, updated)
       setPlan(updated)
       setSavedInfo({ at: new Date(), persisted: res.persisted })
+
+      // Offer to notify members (avoids spamming on minor re-edits).
+      if (confirm('Plan publicado.\n\n¿Mandar notificación push a los miembros?')) {
+        const r = await broadcastNotification({
+          title: 'Planificación disponible 🏔',
+          body:  `Ya está la semana ${formatWeekRange(weekId)}. Anotate a tus turnos.`,
+          url:   '/planificacion-semanal',
+          tag:   `plan-${weekId}`,
+        })
+        if (r?.sent != null) setSavedInfo({ at: new Date(), persisted: res.persisted, pushed: r.sent })
+      }
     } catch (e) {
       setError(e.message ?? 'Error guardando')
     } finally {
@@ -255,6 +269,32 @@ export default function PlanEditor() {
     } catch (e) {
       setError(e.message ?? 'Error borrando')
     }
+  }
+
+  function exportCsv() {
+    downloadText(`bandurrias-plan-${weekId}.csv`, planToCsv(plan))
+  }
+
+  async function importCsv(e) {
+    const file = e.target.files?.[0]
+    e.target.value = '' // allow re-importing same file
+    if (!file) return
+    try {
+      const text = await file.text()
+      const activities = csvToActivities(text)
+      if (!activities.length) { setError('CSV vacío o con formato inválido.'); return }
+      setPlan(p => ({ ...p, activities }))
+      setError(null)
+      setSavedInfo(null)
+    } catch (err) {
+      setError('No se pudo leer el CSV: ' + (err.message ?? ''))
+    }
+  }
+
+  // Render the plan (preview) then trigger the browser print dialog → Save as PDF.
+  function exportPdf() {
+    setPreview(true)
+    setTimeout(() => window.print(), 350)
   }
 
   if (!plan) {
@@ -274,7 +314,33 @@ export default function PlanEditor() {
       <WeekPicker weekId={weekId} setWeekId={setWeekIdSafe} />
 
       {/* Action bar */}
-      <div className="flex items-center justify-end gap-2 flex-wrap">
+      <div className="flex items-center gap-2 flex-wrap no-print">
+        {/* Export / import group */}
+        <input ref={fileRef} type="file" accept=".csv,text/csv" onChange={importCsv} className="hidden" />
+        <button
+          onClick={() => fileRef.current?.click()}
+          title="Importar un CSV exportado (usalo como plantilla de otra semana)"
+          className="flex items-center gap-1.5 bg-white/4 text-slate-300 border border-white/8 rounded-xl px-3 py-2.5 text-xs font-bold hover:bg-white/8 transition-all"
+        >
+          <FileUp size={13} /> Importar CSV
+        </button>
+        <button
+          onClick={exportCsv}
+          title="Exportar este plan como CSV reutilizable"
+          className="flex items-center gap-1.5 bg-white/4 text-slate-300 border border-white/8 rounded-xl px-3 py-2.5 text-xs font-bold hover:bg-white/8 transition-all"
+        >
+          <FileDown size={13} /> CSV
+        </button>
+        <button
+          onClick={exportPdf}
+          title="Exportar como PDF (abre el diálogo de impresión → Guardar como PDF)"
+          className="flex items-center gap-1.5 bg-white/4 text-slate-300 border border-white/8 rounded-xl px-3 py-2.5 text-xs font-bold hover:bg-white/8 transition-all"
+        >
+          <Printer size={13} /> PDF
+        </button>
+
+        <div className="flex-1" />
+
         <button
           onClick={() => setPreview(p => !p)}
           className="flex items-center gap-1.5 bg-white/4 text-slate-300 border border-white/8 rounded-xl px-3 py-2.5 text-xs font-bold hover:bg-white/8 transition-all"
@@ -312,6 +378,7 @@ export default function PlanEditor() {
             {savedInfo.persisted === 'supabase'
               ? '· Sincronizado en Supabase, visible para todos los miembros'
               : '· Guardado localmente (solo este navegador en dev)'}
+            {savedInfo.pushed != null && ` · 🔔 ${savedInfo.pushed} notificaciones enviadas`}
           </span>
         </div>
       )}

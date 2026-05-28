@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { loadWeek, listMockWeekIds } from '../lib/data'
 import RocoWeekPlan from '../components/RocoWeekPlan'
 import { Card } from '../components/ui'
-import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Calendar, Printer } from 'lucide-react'
 
 function getWeekId(offsetWeeks = 0) {
   const today  = new Date()
@@ -64,7 +64,7 @@ export default function Schedule() {
     <div className="flex flex-col gap-5 max-w-[1140px] mx-auto">
 
       {/* Slim week nav (above Roco header) */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 no-print">
         <button
           onClick={() => setOffset(o => o - 1)}
           className="w-9 h-9 rounded-lg bg-card border border-white/8 flex items-center justify-center text-slate-400 hover:text-white hover:border-white/16 transition-all active:scale-90 shrink-0"
@@ -84,6 +84,16 @@ export default function Schedule() {
             </button>
           )}
         </div>
+
+        {week && (
+          <button
+            onClick={() => window.print()}
+            className="w-9 h-9 rounded-lg bg-card border border-white/8 flex items-center justify-center text-slate-400 hover:text-brand hover:border-brand/30 transition-all active:scale-90 shrink-0"
+            title="Exportar PDF"
+          >
+            <Printer size={16} />
+          </button>
+        )}
 
         <button
           onClick={() => setOffset(o => o + 1)}

@@ -4,8 +4,6 @@ import { useAuth } from '../lib/AuthContext'
 import PlanEditor from '../components/PlanEditor'
 
 import { isAdmin as checkAdmin } from '../lib/auth'
-const DAYS  = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo']
-const TIMES = ['6:00','7:00','8:00','9:00','10:00','16:00','17:00','18:00','19:00','20:00']
 
 function getCurrentWeekId() {
   const today  = new Date()
@@ -36,7 +34,6 @@ export default function Admin() {
 
   const TABS = [
     { id: 'plan',    label: 'Planificación', icon: PlanIcon },
-    { id: 'week',    label: 'Semana',        icon: CalIcon  },
     { id: 'members', label: 'Miembros',      icon: TeamIcon },
     { id: 'bot',     label: 'Bot WA',        icon: BotIcon  },
   ]
@@ -79,190 +76,12 @@ export default function Admin() {
 
       {/* Content */}
       {activeTab === 'plan'    && <PlanEditor />}
-      {activeTab === 'week'    && <WeekTab />}
       {activeTab === 'members' && <MembersTab />}
       {activeTab === 'bot'     && <BotTab />}
     </div>
   )
 }
 
-/* ─────────────────────────── SEMANA ─────────────────────────── */
-function WeekTab() {
-  const [weekId, setWeekId]       = useState(getCurrentWeekId())
-  const [sessions, setSessions]   = useState([])
-  const [saving, setSaving]       = useState(false)
-  const [published, setPublished] = useState(false)
-  const [newSess, setNewSess]     = useState({ day: 'Lunes', time: '9:00', description: '', location: '' })
-
-  useEffect(() => { loadSessions() }, [weekId])
-
-  async function loadSessions() {
-    const [{ data: week }, { data }] = await Promise.all([
-      supabase.from('weeks').select('published').eq('id', weekId).maybeSingle(),
-      supabase.from('sessions').select('*, attendance(count)').eq('week_id', weekId),
-    ])
-    setPublished(week?.published ?? false)
-    setSessions(data ?? [])
-  }
-
-  async function addSession() {
-    if (!newSess.description && !newSess.location) return
-    await supabase.from('weeks').upsert({ id: weekId, published: false }, { ignoreDuplicates: true })
-    await supabase.from('sessions').insert({ ...newSess, week_id: weekId })
-    setNewSess(p => ({ ...p, description: '', location: '' }))
-    loadSessions()
-  }
-
-  async function deleteSession(id) {
-    await supabase.from('sessions').delete().eq('id', id)
-    setSessions(prev => prev.filter(s => s.id !== id))
-  }
-
-  async function publishWeek() {
-    setSaving(true)
-    await supabase.from('weeks').upsert({ id: weekId, published: true })
-    setPublished(true)
-    setSaving(false)
-  }
-
-  const DAY_ORDER = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo']
-  const sorted    = [...sessions].sort((a, b) => DAY_ORDER.indexOf(a.day) - DAY_ORDER.indexOf(b.day))
-
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-6 items-start">
-
-      {/* Form panel */}
-      <div className="flex flex-col gap-4">
-        {/* Week selector */}
-        <div className="bg-card border border-white/[0.1] rounded-2xl p-4 flex items-center gap-3">
-          <div className="flex-1 min-w-0">
-            <label className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Semana activa</label>
-            <input
-              type="date"
-              value={weekId}
-              onChange={e => setWeekId(e.target.value)}
-              className="mt-1.5 w-full bg-[#060810] text-white rounded-xl px-3 py-2.5 text-sm border border-white/5 focus:outline-none focus:border-brand/40"
-            />
-          </div>
-          {published && (
-            <div className="shrink-0 flex flex-col items-center gap-1 text-center">
-              <div className="w-2 h-2 rounded-full bg-brand" />
-              <span className="text-brand text-[10px] font-bold">Online</span>
-            </div>
-          )}
-        </div>
-
-        {/* Nueva sesión */}
-        <div className="bg-card border border-white/[0.1] rounded-2xl p-5 flex flex-col gap-3">
-          <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Nueva sesión</p>
-
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="text-slate-600 text-[10px] uppercase tracking-wider mb-1 block">Día</label>
-              <select value={newSess.day} onChange={e => setNewSess(p => ({ ...p, day: e.target.value }))}
-                className="w-full bg-[#060810] text-white rounded-xl px-3 py-2.5 text-sm border border-white/5 focus:outline-none focus:border-brand/40">
-                {DAYS.map(d => <option key={d}>{d}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="text-slate-600 text-[10px] uppercase tracking-wider mb-1 block">Hora</label>
-              <select value={newSess.time} onChange={e => setNewSess(p => ({ ...p, time: e.target.value }))}
-                className="w-full bg-[#060810] text-white rounded-xl px-3 py-2.5 text-sm border border-white/5 focus:outline-none focus:border-brand/40">
-                {TIMES.map(t => <option key={t}>{t}</option>)}
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="text-slate-600 text-[10px] uppercase tracking-wider mb-1 block">Lugar</label>
-            <input placeholder="Pista de atletismo, Cerro, etc." value={newSess.location}
-              onChange={e => setNewSess(p => ({ ...p, location: e.target.value }))}
-              className="w-full bg-[#060810] text-white rounded-xl px-3 py-2.5 text-sm border border-white/5 placeholder-slate-600 focus:outline-none focus:border-brand/40" />
-          </div>
-
-          <div>
-            <label className="text-slate-600 text-[10px] uppercase tracking-wider mb-1 block">Descripción</label>
-            <textarea placeholder="Ej: 6×400m al 95% con recuperación caminada de 90s" value={newSess.description}
-              onChange={e => setNewSess(p => ({ ...p, description: e.target.value }))}
-              rows={3}
-              className="w-full bg-[#060810] text-white rounded-xl px-3 py-2.5 text-sm border border-white/5 placeholder-slate-600 resize-none focus:outline-none focus:border-brand/40" />
-          </div>
-
-          <button onClick={addSession}
-            className="w-full bg-brand text-black rounded-xl py-3 text-sm font-bold active:scale-[0.98] transition-all hover:bg-[#c4f01a]">
-            + Agregar sesión
-          </button>
-        </div>
-
-        {/* Publish button */}
-        {sessions.length > 0 && !published && (
-          <button onClick={publishWeek} disabled={saving}
-            className="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-2xl py-3.5 font-bold text-sm active:scale-[0.98] transition-all disabled:opacity-50">
-            {saving ? 'Publicando...' : '✓ Publicar semana'}
-          </button>
-        )}
-        {published && (
-          <button
-            onClick={async () => {
-              await supabase.from('weeks').update({ published: false }).eq('id', weekId)
-              setPublished(false)
-            }}
-            className="w-full bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 rounded-2xl py-3 font-bold text-sm active:scale-[0.98] transition-all">
-            Despublicar semana
-          </button>
-        )}
-      </div>
-
-      {/* Session list */}
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center justify-between">
-          <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Sesiones · {sessions.length}</p>
-        </div>
-
-        {sorted.length === 0 ? (
-          <div className="bg-card border border-white/[0.1] rounded-2xl p-12 text-center">
-            <p className="text-slate-500 text-sm">Sin sesiones para esta semana.</p>
-            <p className="text-slate-600 text-xs mt-1.5">Usá el formulario para agregar.</p>
-          </div>
-        ) : sorted.map(s => {
-          let badge = null
-          try { badge = JSON.parse(s.description)?.badge } catch {}
-          const count = s.attendance?.[0]?.count ?? 0
-
-          return (
-            <div key={s.id} className="bg-card border border-white/[0.1] rounded-2xl p-4 flex items-start gap-4 group">
-              {/* Day pill */}
-              <div className="shrink-0 w-14 h-14 rounded-xl bg-brand/8 border border-brand/10 flex flex-col items-center justify-center">
-                <span className="text-brand text-[10px] font-bold uppercase tracking-wide leading-tight">{s.day.slice(0,3)}</span>
-                {s.time && <span className="text-slate-400 text-[9px] mt-0.5">{s.time}</span>}
-              </div>
-
-              <div className="flex-1 min-w-0">
-                {badge && (
-                  <span className="text-brand text-[10px] font-bold uppercase tracking-widest">{badge.label}</span>
-                )}
-                {s.location && <p className="text-slate-400 text-xs mt-0.5">📍 {s.location}</p>}
-                {s.description && !badge && (
-                  <p className="text-slate-300 text-sm mt-1 line-clamp-2">{s.description}</p>
-                )}
-                <div className="flex items-center gap-3 mt-2">
-                  <span className="text-slate-600 text-[10px] font-semibold">
-                    {count} {count === 1 ? 'confirmado' : 'confirmados'}
-                  </span>
-                </div>
-              </div>
-
-              <button onClick={() => deleteSession(s.id)}
-                className="shrink-0 opacity-0 group-hover:opacity-100 w-8 h-8 flex items-center justify-center rounded-xl text-slate-600 hover:text-red-400 hover:bg-red-500/10 transition-all">
-                <TrashIcon />
-              </button>
-            </div>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
 
 /* ─────────────────────────── MIEMBROS ─────────────────────────── */
 function MembersTab() {
@@ -1053,9 +872,6 @@ function BotTab() {
 }
 
 /* ── Icons ── */
-function CalIcon({ size = 16 }) {
-  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-}
 function PlanIcon({ size = 16 }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h4"/></svg>
 }
@@ -1064,9 +880,6 @@ function TeamIcon({ size = 16 }) {
 }
 function BotIcon({ size = 16 }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg>
-}
-function TrashIcon() {
-  return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
 }
 function LockIcon({ size = 16 }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>

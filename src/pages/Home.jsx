@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../lib/AuthContext'
 import { loadWeek } from '../lib/data'
-import { loadMyAttendance, loadAttendanceCounts, toggleAttendance, turnoKey } from '../lib/attendance'
+import { loadMyAttendance, loadRoster, toggleAttendance, turnoKey } from '../lib/attendance'
 import { Section, Card } from '../components/ui'
+import NotificationsCard from '../components/NotificationsCard'
 import { activityToCard, DAY_KEYS, DAY_NAME, DAY_ABBREV } from '../components/RocoWeekPlan'
 import { ArrowRight, Calendar, Check, Clock, Users, Key, X, CalendarCheck } from 'lucide-react'
 
@@ -34,34 +35,38 @@ export default function Home() {
   const [week, setWeek]     = useState(null)
   const [loading, setLoading] = useState(true)
   const [myKeys, setMyKeys] = useState(() => new Set())
-  const [counts, setCounts] = useState({})
+  const [roster, setRoster] = useState({})
   const weekId = getDisplayWeekId()
   const isSunday = new Date().getDay() === 0
   // DB-backed per-user flag (members.password_set). Only show once profile loaded.
   const showPwBanner = profile && profile.password_set !== true
+  const myName = profile?.name || user?.email?.split('@')[0] || 'Vos'
 
   useEffect(() => {
     setLoading(true)
     ;(async () => {
-      const [w, mine, c] = await Promise.all([
+      const [w, mine, r] = await Promise.all([
         loadWeek(weekId),
         loadMyAttendance(weekId, user?.id),
-        loadAttendanceCounts(weekId),
+        loadRoster(weekId),
       ])
       setWeek(w)
       setMyKeys(mine)
-      setCounts(c)
+      setRoster(r)
       setLoading(false)
     })()
   }, [weekId, user?.id])
 
   async function handleToggle(day, text) {
-    const wasOn = myKeys.has(turnoKey(day, text))
+    const key   = turnoKey(day, text)
+    const wasOn = myKeys.has(key)
     const next  = await toggleAttendance(weekId, user?.id, day, text, myKeys)
     setMyKeys(next)
-    setCounts(prev => {
-      const k = turnoKey(day, text)
-      return { ...prev, [k]: Math.max(0, (prev[k] ?? 0) + (wasOn ? -1 : 1)) }
+    // Optimistic roster update for own name.
+    setRoster(prev => {
+      const list = (prev[key] ?? []).filter(p => p.userId !== (user?.id ?? myName))
+      if (!wasOn) list.push({ userId: user?.id ?? myName, name: myName })
+      return { ...prev, [key]: list }
     })
   }
 
@@ -118,6 +123,9 @@ export default function Home() {
           </Link>
         </div>
       )}
+
+      {/* Notificaciones push */}
+      <NotificationsCard />
 
       {/* Mis inscripciones (quick view) */}
       {!loading && activities.length > 0 && (
@@ -205,7 +213,8 @@ export default function Home() {
                 key={a.id}
                 activity={a}
                 myKeys={myKeys}
-                counts={counts}
+                roster={roster}
+                myId={user?.id ?? myName}
                 onToggle={handleToggle}
               />
             ))}
@@ -216,18 +225,16 @@ export default function Home() {
   )
 }
 
-/* ── Compact plan card w/ per-turno attendance toggle ────────────────────── */
-function PlanCard({ activity, myKeys, counts, onToggle }) {
+/* ── Plan card w/ per-turno attendance + roster of names ─────────────────── */
+function PlanCard({ activity, myKeys, roster, myId, onToggle }) {
   const cardView = activityToCard(activity)
   const badge    = BADGE_STYLE[activity.badge?.type] ?? BADGE_STYLE.rest
   const isRest   = activity.rest || activity.badge?.type === 'rest'
   const multiDay = activity.days.length > 1
 
-  // Group turnos by day for clear UI.
   const turnosByDay = {}
   for (const t of activity.turnos ?? []) {
-    if (!turnosByDay[t.day]) turnosByDay[t.day] = []
-    turnosByDay[t.day].push(t)
+    (turnosByDay[t.day] ??= []).push(t)
   }
 
   return (
@@ -251,47 +258,34 @@ function PlanCard({ activity, myKeys, counts, onToggle }) {
       )}
 
       {!isRest && (activity.turnos?.length > 0) && (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3">
           <p className="text-slate-600 text-[10px] uppercase tracking-widest font-semibold flex items-center gap-1.5">
-            <Clock size={10} /> Anotate a un turno
+            <Clock size={10} /> Anotate · tocá tu turno
           </p>
 
           {activity.days.map(day => {
             const dayTurnos = turnosByDay[day] ?? []
             if (dayTurnos.length === 0) return null
             return (
-              <div key={day} className="flex flex-col gap-1.5">
+              <div key={day} className="flex flex-col gap-2">
                 {multiDay && (
                   <p className="text-slate-500 text-[10px] font-bold uppercase tracking-wider">{DAY_NAME[day]}</p>
                 )}
-                <div className="flex flex-wrap gap-2">
-                  {dayTurnos.map((t, i) => {
-                    const key      = turnoKey(day, t.text)
-                    const selected = myKeys.has(key)
-                    const count    = counts[key] ?? 0
-                    return (
-                      <button
-                        key={i}
-                        onClick={() => onToggle(day, t.text)}
-                        className={`group flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg border transition-all active:scale-95 ${
-                          selected
-                            ? 'bg-brand text-black border-brand'
-                            : 'bg-white/4 text-slate-300 border-white/10 hover:border-white/20 hover:bg-white/8'
-                        }`}
-                      >
-                        {selected && <Check size={11} strokeWidth={3} />}
-                        {multiDay ? `${DAY_ABBREV[day]} ${t.text}` : t.text}
-                        {count > 0 && (
-                          <span className={`inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
-                            selected ? 'bg-black/15 text-black' : 'bg-white/8 text-slate-400'
-                          }`}>
-                            <Users size={9} /> {count}
-                          </span>
-                        )}
-                      </button>
-                    )
-                  })}
-                </div>
+                {dayTurnos.map((t, i) => {
+                  const key      = turnoKey(day, t.text)
+                  const selected = myKeys.has(key)
+                  const people   = roster[key] ?? []
+                  return (
+                    <TurnoRow
+                      key={i}
+                      label={multiDay ? `${DAY_ABBREV[day]} ${t.text}` : t.text}
+                      selected={selected}
+                      people={people}
+                      myId={myId}
+                      onClick={() => onToggle(day, t.text)}
+                    />
+                  )
+                })}
               </div>
             )
           })}
@@ -302,5 +296,51 @@ function PlanCard({ activity, myKeys, counts, onToggle }) {
         </div>
       )}
     </Card>
+  )
+}
+
+/* ── One turno: toggle button + roster of who's going ────────────────────── */
+function TurnoRow({ label, selected, people, myId, onClick }) {
+  // Show own name first, then others.
+  const ordered = [...people].sort((a, b) =>
+    (a.userId === myId ? -1 : 0) - (b.userId === myId ? -1 : 0)
+  )
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <button
+        onClick={onClick}
+        className={`group self-start flex items-center gap-1.5 text-xs font-bold px-2.5 py-1.5 rounded-lg border transition-all active:scale-95 ${
+          selected
+            ? 'bg-brand text-black border-brand'
+            : 'bg-white/4 text-slate-300 border-white/10 hover:border-white/20 hover:bg-white/8'
+        }`}
+      >
+        {selected && <Check size={11} strokeWidth={3} />}
+        {label}
+        <span className={`inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
+          selected ? 'bg-black/15 text-black' : 'bg-white/8 text-slate-400'
+        }`}>
+          <Users size={9} /> {people.length}
+        </span>
+      </button>
+
+      {ordered.length > 0 && (
+        <div className="flex flex-wrap gap-1 pl-0.5">
+          {ordered.map((p, i) => (
+            <span
+              key={i}
+              className={`text-[10px] px-2 py-0.5 rounded-full ${
+                p.userId === myId
+                  ? 'bg-brand/15 text-brand font-bold'
+                  : 'bg-white/5 text-slate-400'
+              }`}
+            >
+              {p.userId === myId ? 'Vos' : p.name}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }

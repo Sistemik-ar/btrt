@@ -29,3 +29,23 @@ body {
 ::-webkit-scrollbar-track    { background: transparent; }
 ::-webkit-scrollbar-thumb    { background: rgba(255,255,255,0.08); border-radius: 2px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.16); }
+
+/* ── Print: export the weekly plan as a clean PDF ──────────────────────────
+   Isolates .roco-plan and hides all app chrome. Use the browser print dialog
+   → "Guardar como PDF". Tip: activá "Gráficos de fondo" para conservar el
+   fondo oscuro del diseño de Roco. */
+@media print {
+  @page { margin: 8mm; }
+  html, body { background: #0a0a0a !important; }
+  body * { visibility: hidden !important; }
+  .roco-plan, .roco-plan * { visibility: visible !important; }
+  .roco-plan {
+    position: absolute;
+    left: 0; top: 0;
+    width: 100%;
+    border: none !important;
+  }
+  .roco-plan .rp-day-card { break-inside: avoid; }
+  /* Belt-and-suspenders: drop app chrome from layout entirely. */
+  aside, nav, .no-print { display: none !important; }
+}

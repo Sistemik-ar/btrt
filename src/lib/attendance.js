@@ -55,6 +55,39 @@ export async function loadAttendanceCounts(weekId) {
   return counts
 }
 
+const MOCK_ROSTER = {
+  'lun::⏰ 18hs':          ['Juan Pérez', 'María González', 'Carlos López'],
+  'mar::⏰ 9hs':           ['Ana Martínez', 'Diego Rodríguez'],
+  'mar::⏰ 18hs':          ['Lucía Fernández', 'Pedro Sosa', 'Sofía Ruiz', 'Martín Díaz'],
+  'mie::⏰ 18hs':          ['Juan Pérez', 'Valentina Gómez'],
+  'jue::⏰ 9hs':           ['Carlos López'],
+  'jue::⏰ 18hs':          ['Ana Martínez', 'Diego Rodríguez', 'Sofía Ruiz'],
+  'sab::⏰ Salida 8:30hs': ['Juan Pérez', 'María González', 'Pedro Sosa', 'Lucía Fernández', 'Martín Díaz', 'Valentina Gómez'],
+}
+
+/**
+ * Roster of names per turno for the whole team (admin or not).
+ * Returns { turnoKey: [{ userId, name }] }.
+ * Prod → week_roster RPC (SECURITY DEFINER, only exposes name).
+ */
+export async function loadRoster(weekId) {
+  if (USE_MOCK) {
+    const map = {}
+    for (const [key, names] of Object.entries(MOCK_ROSTER)) {
+      map[key] = names.map(name => ({ userId: name, name }))
+    }
+    return map
+  }
+
+  const { data, error } = await supabase.rpc('week_roster', { p_week_id: weekId })
+  if (error) return {}
+  const map = {}
+  for (const r of data ?? []) {
+    (map[r.turno_key] ??= []).push({ userId: r.user_id, name: r.name })
+  }
+  return map
+}
+
 /**
  * Toggle one turno on/off for current user.
  * Returns updated set of confirmed keys.
