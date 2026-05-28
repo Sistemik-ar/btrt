@@ -72,6 +72,23 @@ export async function saveWeek(weekId, plan) {
   return { ok: true, persisted: 'supabase' }
 }
 
+/**
+ * Realtime: invoke `onChange` whenever this week's plan row changes.
+ * No-op in dev (mocks). Returns an unsubscribe fn.
+ */
+export function subscribeWeek(weekId, onChange) {
+  if (USE_MOCK) return () => {}
+  const ch = supabase
+    .channel(`rt-week-${weekId}`)
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'weeks', filter: `id=eq.${weekId}` },
+      onChange,
+    )
+    .subscribe()
+  return () => { supabase.removeChannel(ch) }
+}
+
 export async function deleteWeek(weekId) {
   if (USE_MOCK) {
     localStorage.removeItem(LS_DRAFT_KEY(weekId))

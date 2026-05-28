@@ -78,12 +78,17 @@ export async function unsubscribeFromPush() {
   await sub.unsubscribe()
 }
 
-const PUSH_ENDPOINT = import.meta.env.VITE_PUSH_ENDPOINT
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
+const ANON_KEY     = import.meta.env.VITE_SUPABASE_ANON_KEY
+// Defaults to the `notify` Edge Function on the same Supabase project.
+const PUSH_ENDPOINT =
+  import.meta.env.VITE_PUSH_ENDPOINT ||
+  (SUPABASE_URL ? `${SUPABASE_URL}/functions/v1/notify` : null)
 
 /**
- * Ask the bot to broadcast a push to all subscribed members.
- * Best-effort: no-op if VITE_PUSH_ENDPOINT isn't configured. The bot
- * re-verifies the JWT is an admin before sending.
+ * Ask the `notify` Edge Function to broadcast a push to all subscribed members.
+ * Best-effort: no-op if no endpoint/session. The function re-verifies the JWT
+ * is an admin before sending.
  */
 export async function broadcastNotification({ title, body, url, tag }) {
   if (!PUSH_ENDPOINT) return { skipped: true }
@@ -95,6 +100,7 @@ export async function broadcastNotification({ title, body, url, tag }) {
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${session.access_token}`,
+      apikey: ANON_KEY,
     },
     body: JSON.stringify({ title, body, url, tag }),
   })

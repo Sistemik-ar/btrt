@@ -89,6 +89,23 @@ export async function loadRoster(weekId) {
 }
 
 /**
+ * Realtime: invoke `onChange` whenever anyone signs up/off for this week.
+ * No-op in dev (mocks). Returns an unsubscribe fn.
+ */
+export function subscribeAttendance(weekId, onChange) {
+  if (USE_MOCK) return () => {}
+  const ch = supabase
+    .channel(`rt-att-${weekId}`)
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'week_attendance', filter: `week_id=eq.${weekId}` },
+      onChange,
+    )
+    .subscribe()
+  return () => { supabase.removeChannel(ch) }
+}
+
+/**
  * Toggle one turno on/off for current user.
  * Returns updated set of confirmed keys.
  */

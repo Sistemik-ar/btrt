@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { loadWeek, listMockWeekIds } from '../lib/data'
+import { loadWeek, listMockWeekIds, subscribeWeek } from '../lib/data'
 import RocoWeekPlan from '../components/RocoWeekPlan'
 import { Card } from '../components/ui'
 import { ChevronLeft, ChevronRight, Calendar, Printer } from 'lucide-react'
@@ -53,11 +53,20 @@ export default function Schedule() {
 
   useEffect(() => {
     if (!bumped) return
+    let alive = true
     ;(async () => {
       setLoading(true)
-      setWeek(await loadWeek(weekId))
-      setLoading(false)
+      const w = await loadWeek(weekId)
+      if (alive) { setWeek(w); setLoading(false) }
     })()
+
+    // Live: a freshly published/edited plan shows up without switching tabs.
+    const off = subscribeWeek(weekId, async () => {
+      const w = await loadWeek(weekId)
+      if (alive) setWeek(w)
+    })
+
+    return () => { alive = false; off() }
   }, [weekId, bumped])
 
   return (

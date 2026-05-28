@@ -144,6 +144,24 @@ LANGUAGE sql SECURITY DEFINER SET search_path = public AS $$
 $$;
 GRANT EXECUTE ON FUNCTION public.week_roster(DATE) TO authenticated;
 
+-- ── 6) Realtime (updates en vivo por websocket) ─────────────────────────────
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'weeks'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.weeks;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'week_attendance'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.week_attendance;
+  END IF;
+END $$;
+
 -- ════════════════════════════════════════════════════════════════════════════
 --  Verificación rápida (corré aparte si querés confirmar):
 --    SELECT column_name FROM information_schema.columns

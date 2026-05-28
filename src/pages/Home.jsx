@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../lib/AuthContext'
-import { loadWeek } from '../lib/data'
-import { loadMyAttendance, loadRoster, toggleAttendance, turnoKey } from '../lib/attendance'
+import { loadWeek, subscribeWeek } from '../lib/data'
+import { loadMyAttendance, loadRoster, toggleAttendance, turnoKey, subscribeAttendance } from '../lib/attendance'
 import { Section, Card } from '../components/ui'
 import NotificationsCard from '../components/NotificationsCard'
 import { activityToCard, DAY_KEYS, DAY_NAME, DAY_ABBREV } from '../components/RocoWeekPlan'
@@ -50,18 +50,32 @@ export default function Home() {
   const myName = cleanName(profile?.name) || user?.email?.split('@')[0] || 'Vos'
 
   useEffect(() => {
-    setLoading(true)
+    let alive = true
     ;(async () => {
+      setLoading(true)
       const [w, mine, r] = await Promise.all([
         loadWeek(weekId),
         loadMyAttendance(weekId, user?.id),
         loadRoster(weekId),
       ])
+      if (!alive) return
       setWeek(w)
       setMyKeys(mine)
       setRoster(r)
       setLoading(false)
     })()
+
+    // Live updates: plan publish/edit refreshes the week; any sign-up/off refreshes the roster.
+    const offWeek = subscribeWeek(weekId, async () => {
+      const w = await loadWeek(weekId)
+      if (alive) setWeek(w)
+    })
+    const offAtt = subscribeAttendance(weekId, async () => {
+      const r = await loadRoster(weekId)
+      if (alive) setRoster(r)
+    })
+
+    return () => { alive = false; offWeek(); offAtt() }
   }, [weekId, user?.id])
 
   async function handleToggle(day, text) {
