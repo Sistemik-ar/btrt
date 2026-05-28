@@ -64,8 +64,7 @@ export async function saveWeek(weekId, plan) {
     if (/plan.+column|schema cache/i.test(error.message)) {
       throw new Error(
         'Falta aplicar la migración de Supabase. Pegá el SQL de ' +
-        'supabase/migrations/20260527000000_weeks_plan_jsonb.sql ' +
-        'en Supabase Studio → SQL Editor.'
+        'supabase/migrations/APPLY_ALL.sql en Supabase Studio → SQL Editor.'
       )
     }
     throw error
