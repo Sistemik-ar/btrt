@@ -5,7 +5,7 @@ const AuthContext = createContext(null)
 
 const DEV_EMAIL   = import.meta.env.VITE_ADMIN_EMAIL ?? 'dev@btrt.local'
 const DEV_USER    = { id: 'dev-user', email: DEV_EMAIL }
-const DEV_PROFILE = { id: 'dev-user', name: 'Dev Admin', email: DEV_EMAIL, status: 'active', last_payment: new Date().toISOString() }
+const DEV_PROFILE = { id: 'dev-user', name: 'Dev Admin', email: DEV_EMAIL, status: 'active', password_set: true, last_payment: new Date().toISOString() }
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(undefined)

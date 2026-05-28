@@ -4,8 +4,8 @@ import { useAuth } from '../lib/AuthContext'
 import { loadWeek } from '../lib/data'
 import { loadMyAttendance, loadAttendanceCounts, toggleAttendance, turnoKey } from '../lib/attendance'
 import { Section, Card } from '../components/ui'
-import { activityToCard, DAY_NAME, DAY_ABBREV } from '../components/RocoWeekPlan'
-import { ArrowRight, Calendar, Check, Clock, Users, Key, X } from 'lucide-react'
+import { activityToCard, DAY_KEYS, DAY_NAME, DAY_ABBREV } from '../components/RocoWeekPlan'
+import { ArrowRight, Calendar, Check, Clock, Users, Key, X, CalendarCheck } from 'lucide-react'
 
 /**
  * Returns the weekId to display on the home dashboard.
@@ -29,20 +29,16 @@ const BADGE_STYLE = {
   rest:    { bg: 'bg-white/5',       text: 'text-slate-500'  },
 }
 
-function hasSetPassword() {
-  try { return localStorage.getItem('btrt-password-set') === '1' }
-  catch { return true }
-}
-
 export default function Home() {
   const { user, profile } = useAuth()
-  const [week, setWeek]               = useState(null)
-  const [loading, setLoading]         = useState(true)
-  const [myKeys, setMyKeys]           = useState(() => new Set())
-  const [counts, setCounts]           = useState({})
-  const [showPwBanner, setShowPwBanner] = useState(() => !hasSetPassword())
+  const [week, setWeek]     = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [myKeys, setMyKeys] = useState(() => new Set())
+  const [counts, setCounts] = useState({})
   const weekId = getDisplayWeekId()
   const isSunday = new Date().getDay() === 0
+  // DB-backed per-user flag (members.password_set). Only show once profile loaded.
+  const showPwBanner = profile && profile.password_set !== true
 
   useEffect(() => {
     setLoading(true)
@@ -59,11 +55,6 @@ export default function Home() {
     })()
   }, [weekId, user?.id])
 
-  function dismissPwBanner() {
-    try { localStorage.setItem('btrt-password-set', '1') } catch {}
-    setShowPwBanner(false)
-  }
-
   async function handleToggle(day, text) {
     const wasOn = myKeys.has(turnoKey(day, text))
     const next  = await toggleAttendance(weekId, user?.id, day, text, myKeys)
@@ -78,6 +69,17 @@ export default function Home() {
   const trainingActs    = activities.filter(a => !a.rest && a.badge?.type !== 'rest')
   const totalTurnos     = trainingActs.reduce((s, a) => s + (a.turnos?.length ?? 0), 0)
   const confirmedTurnos = [...myKeys].length
+
+  // Flatten the turnos this user is signed up for, for the quick "Mis inscripciones" view.
+  const mySignups = []
+  for (const a of activities) {
+    for (const t of a.turnos ?? []) {
+      if (myKeys.has(turnoKey(t.day, t.text))) {
+        mySignups.push({ day: t.day, text: t.text, label: a.badge?.label, type: a.badge?.type })
+      }
+    }
+  }
+  mySignups.sort((x, y) => DAY_KEYS.indexOf(x.day) - DAY_KEYS.indexOf(y.day))
 
   const dateLabel = new Date().toLocaleDateString('es-AR', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
@@ -99,7 +101,7 @@ export default function Home() {
         )}
       </header>
 
-      {showPwBanner && user && (
+      {showPwBanner && (
         <div className="bg-card border border-brand/30 rounded-2xl px-4 py-3 flex items-center gap-3 flex-wrap">
           <div className="w-8 h-8 rounded-lg bg-brand/15 border border-brand/30 flex items-center justify-center shrink-0">
             <Key size={14} className="text-brand" />
@@ -114,14 +116,51 @@ export default function Home() {
           >
             Crear contraseña
           </Link>
-          <button
-            onClick={dismissPwBanner}
-            title="Cerrar"
-            className="w-8 h-8 rounded-lg text-slate-500 hover:text-white hover:bg-white/8 transition-all flex items-center justify-center shrink-0"
-          >
-            <X size={14} />
-          </button>
         </div>
+      )}
+
+      {/* Mis inscripciones (quick view) */}
+      {!loading && activities.length > 0 && (
+        <Section
+          title="Mis turnos de la semana"
+          subtitle={mySignups.length
+            ? `Estás anotado a ${mySignups.length} turno${mySignups.length !== 1 ? 's' : ''} · tocá para sacarte`
+            : 'Todavía no te anotaste a ningún turno'}
+          action={
+            <Link to="/planificacion-semanal" className="text-brand text-xs font-semibold hover:underline inline-flex items-center gap-1 shrink-0">
+              Ver detalle <ArrowRight size={12} />
+            </Link>
+          }
+        >
+          <Card className="p-4">
+            {mySignups.length === 0 ? (
+              <p className="text-slate-500 text-sm flex items-center gap-2">
+                <CalendarCheck size={15} className="text-slate-600" />
+                Elegí tus turnos abajo y van a aparecer acá.
+              </p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {mySignups.map((s, i) => {
+                  const style = BADGE_STYLE[s.type] ?? BADGE_STYLE.rest
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => handleToggle(s.day, s.text)}
+                      title={`${s.label ?? ''} — tocá para sacarte`}
+                      className="group flex items-center gap-2 bg-brand text-black rounded-xl pl-3 pr-2 py-2 text-xs font-bold active:scale-95 transition-all"
+                    >
+                      <span className="uppercase tracking-wide">{DAY_ABBREV[s.day]}</span>
+                      <span className="font-semibold">{s.text}</span>
+                      <span className="w-5 h-5 rounded-md bg-black/15 flex items-center justify-center group-hover:bg-black/30 transition-colors">
+                        <X size={11} strokeWidth={3} />
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </Card>
+        </Section>
       )}
 
       {/* Planificación + attendance */}

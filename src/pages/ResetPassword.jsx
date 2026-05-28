@@ -42,13 +42,17 @@ export default function ResetPassword() {
 
     setBusy(true)
     const { error } = await supabase.auth.updateUser({ password })
-    setBusy(false)
 
     if (error) {
+      setBusy(false)
       setError(error.message)
       return
     }
-    try { localStorage.setItem('btrt-password-set', '1') } catch {}
+    // Mark password as set so the dashboard banner disappears (per-user, DB-backed).
+    if (user?.id) {
+      await supabase.from('members').update({ password_set: true }).eq('id', user.id)
+    }
+    setBusy(false)
     setSuccess(true)
     setTimeout(() => navigate('/'), 1500)
   }

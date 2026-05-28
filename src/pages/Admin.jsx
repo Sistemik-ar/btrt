@@ -349,6 +349,11 @@ function MembersTab() {
     const { error } = await supabase.auth.resetPasswordForEmail(member.email, {
       redirectTo: `${window.location.origin}/reset-password`,
     })
+    // Clear password_set so the "Creá tu contraseña" banner reappears for them.
+    if (!error) {
+      await supabase.from('members').update({ password_set: false }).eq('id', member.id)
+      setMembers(prev => prev.map(m => m.id === member.id ? { ...m, password_set: false } : m))
+    }
     setResetting(s => ({ ...s, [member.id]: error ? 'err' : 'ok' }))
     setTimeout(() => setResetting(s => ({ ...s, [member.id]: null })), 2500)
   }
