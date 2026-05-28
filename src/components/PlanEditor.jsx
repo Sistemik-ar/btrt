@@ -3,7 +3,10 @@ import { loadWeek, saveWeek, deleteWeek } from '../lib/data'
 import { planToCsv, csvToActivities, downloadText } from '../lib/planCsv'
 import { broadcastNotification } from '../lib/push'
 import RocoWeekPlan, { DAY_KEYS, DAY_NAME, DAY_ABBREV } from './RocoWeekPlan'
-import { Plus, Trash2, Eye, Save, AlertTriangle, Calendar, FileDown, FileUp, Printer } from 'lucide-react'
+import {
+  Plus, Trash2, Eye, Save, AlertTriangle, Calendar,
+  FileDown, FileUp, Printer, ChevronLeft, ChevronRight, MapPin, Clock,
+} from 'lucide-react'
 
 /* ── Helpers ─────────────────────────────────────────────────────────────── */
 
@@ -14,7 +17,6 @@ function snapMonday(dateStr) {
   d.setDate(d.getDate() - ((d.getDay() + 6) % 7))
   return d.toISOString().split('T')[0]
 }
-
 function getNextMondayId() {
   const today = new Date()
   const dow = today.getDay()
@@ -22,17 +24,14 @@ function getNextMondayId() {
   monday.setDate(today.getDate() - ((dow + 6) % 7) + (dow === 0 ? 0 : 7))
   return monday.toISOString().split('T')[0]
 }
-
 function getThisMondayId() {
   return snapMonday(new Date().toISOString().split('T')[0])
 }
-
 function shiftWeek(weekId, weeks) {
   const d = new Date(weekId + 'T12:00:00')
   d.setDate(d.getDate() + weeks * 7)
   return d.toISOString().split('T')[0]
 }
-
 function formatWeekRange(weekId) {
   if (!weekId) return ''
   const mon = new Date(weekId + 'T12:00:00')
@@ -40,14 +39,22 @@ function formatWeekRange(weekId) {
   const opt = { day: 'numeric', month: 'long' }
   return mon.toLocaleDateString('es-AR', opt) + ' — ' + sun.toLocaleDateString('es-AR', { ...opt, year: 'numeric' })
 }
-
 function weekNumberFromId(weekId) {
   const d = new Date(weekId + 'T12:00:00')
   const start = new Date(d.getFullYear(), 0, 1)
   return Math.ceil((((d - start) / 86400000) + start.getDay() + 1) / 7)
 }
 
-/* ── Defaults ────────────────────────────────────────────────────────────── */
+/* ── Shared styles ───────────────────────────────────────────────────────── */
+
+const INPUT =
+  'w-full h-10 rounded-lg bg-black/20 border border-white/[0.06] px-3 text-sm text-white ' +
+  'placeholder:text-slate-600 transition-colors focus:outline-none focus:border-brand/50 focus:bg-black/30'
+const AREA =
+  'w-full rounded-lg bg-black/20 border border-white/[0.06] px-3 py-2.5 text-sm text-white leading-relaxed ' +
+  'placeholder:text-slate-600 transition-colors resize-none focus:outline-none focus:border-brand/50 focus:bg-black/30'
+
+/* ── Domain defaults ─────────────────────────────────────────────────────── */
 
 const TYPE_LABELS = {
   quality: 'Técnica + Aeróbico',
@@ -55,14 +62,18 @@ const TYPE_LABELS = {
   fondazo: '🏔 Fondo de Montaña',
   rest:    'Descanso',
 }
-
 const TYPE_BG = {
   quality: { tag: 'bg-blue-500/15 text-blue-400 border-blue-500/40',     dot: 'bg-blue-400'   },
   hills:   { tag: 'bg-orange-500/15 text-orange-400 border-orange-500/40', dot: 'bg-orange-400' },
   fondazo: { tag: 'bg-brand/15 text-brand border-brand/40',               dot: 'bg-brand'       },
-  rest:    { tag: 'bg-white/5 text-slate-500 border-white/10',            dot: 'bg-slate-600'  },
+  rest:    { tag: 'bg-white/8 text-slate-300 border-white/15',            dot: 'bg-slate-500'  },
 }
-
+const TYPE_OPTIONS = [
+  { key: 'quality', label: 'Calidad'  },
+  { key: 'hills',   label: 'Cuesta'   },
+  { key: 'fondazo', label: 'Fondo'    },
+  { key: 'rest',    label: 'Descanso' },
+]
 const DEFAULT_TIMES_BY_DAY = {
   lun: ['⏰ 18hs'],
   mar: ['⏰ 9hs', '⏰ 18hs'],
@@ -80,7 +91,6 @@ function defaultActivityForDay(day) {
   if (day === 'mie' || day === 'jue') return trainingActivity([day], 'hills', '🏔 Cuesta · Fuerza Específica')
   return trainingActivity([day], 'quality', 'Técnica + Aeróbico')
 }
-
 function trainingActivity(days, type, label) {
   return {
     id: rid(),
@@ -101,7 +111,6 @@ function trainingActivity(days, type, label) {
     durationLabel: '',
   }
 }
-
 function restActivity(day, label, title) {
   return {
     id: rid(),
@@ -112,20 +121,19 @@ function restActivity(day, label, title) {
     turnos: [],
   }
 }
-
 function defaultPlan(weekId) {
+  const n = weekNumberFromId(weekId)
   return {
     id: weekId,
     published: false,
-    weekNumber: weekNumberFromId(weekId),
-    period: `Período Base · Semana ${weekNumberFromId(weekId)}`,
+    weekNumber: n,
+    period: `Período Base · Semana ${n}`,
     dates: formatWeekRange(weekId),
     docType: 'Planificación Semanal',
     attendance: {
       label: '📋 Registrá tu asistencia para esta semana',
       sub:   'Abrís el form una sola vez · marcás los turnos que vas · enviás',
-      okUrl:  '',
-      modUrl: '',
+      okUrl: '', modUrl: '',
     },
     activities: [
       trainingActivity(['lun', 'mar'], 'quality', 'Técnica + Aeróbico'),
@@ -136,7 +144,7 @@ function defaultPlan(weekId) {
     ],
     footer: {
       left:  'Bandurrias Trail Running Team · Bariloche, Patagonia',
-      right: `Período Base · Semana ${weekNumberFromId(weekId)} · ${formatWeekRange(weekId)}`,
+      right: `Período Base · Semana ${n} · ${formatWeekRange(weekId)}`,
     },
   }
 }
@@ -146,12 +154,9 @@ function defaultPlan(weekId) {
 function getActivityForDay(plan, day) {
   return plan.activities.find(a => a.days.includes(day)) ?? null
 }
-
 function withActivities(plan, fn) {
   return { ...plan, activities: fn(plan.activities).filter(a => a.days.length > 0) }
 }
-
-/** Move `day` to target activity (id). Strip from any other activity. */
 function attachDay(plan, day, targetActivityId) {
   return withActivities(plan, acts => acts.map(a => {
     if (a.id === targetActivityId) {
@@ -163,17 +168,11 @@ function attachDay(plan, day, targetActivityId) {
       return a
     }
     if (a.days.includes(day)) {
-      return {
-        ...a,
-        days:   a.days.filter(d => d !== day),
-        turnos: a.turnos.filter(t => t.day !== day),
-      }
+      return { ...a, days: a.days.filter(d => d !== day), turnos: a.turnos.filter(t => t.day !== day) }
     }
     return a
   }))
 }
-
-/** Detach `day` from its activity and give it a fresh solo activity. */
 function detachDay(plan, day) {
   const stripped = withActivities(plan, acts => acts.map(a =>
     a.days.includes(day)
@@ -182,7 +181,6 @@ function detachDay(plan, day) {
   ))
   return { ...stripped, activities: [...stripped.activities, defaultActivityForDay(day)] }
 }
-
 function patchActivity(plan, activityId, patch) {
   return { ...plan, activities: plan.activities.map(a => a.id === activityId ? { ...a, ...patch } : a) }
 }
@@ -190,18 +188,17 @@ function patchActivity(plan, activityId, patch) {
 /* ── Main component ──────────────────────────────────────────────────────── */
 
 export default function PlanEditor() {
-  const [weekId, setWeekId]   = useState(getNextMondayId())
-  const [plan, setPlan]       = useState(null)
-  const [saving, setSaving]   = useState(false)
-  const [savedInfo, setSavedInfo] = useState(null) // { at, persisted }
-  const [preview, setPreview] = useState(false)
+  const [weekId, setWeekId]       = useState(getNextMondayId())
+  const [plan, setPlan]           = useState(null)
+  const [saving, setSaving]       = useState(false)
+  const [savedInfo, setSavedInfo] = useState(null)
+  const [preview, setPreview]     = useState(false)
   const [activeDay, setActiveDay] = useState('lun')
-  const [error, setError]     = useState(null)
+  const [error, setError]         = useState(null)
   const fileRef = useRef(null)
 
   useEffect(() => {
-    setSavedInfo(null)
-    setError(null)
+    setSavedInfo(null); setError(null)
     ;(async () => {
       try {
         const existing = await loadWeek(weekId)
@@ -213,37 +210,17 @@ export default function PlanEditor() {
     })()
   }, [weekId])
 
-  function setWeekIdSafe(monday) {
-    setWeekId(monday)
-  }
-
-  function updateActivity(activityId, patch) {
-    setPlan(p => patchActivity(p, activityId, patch))
-  }
-
-  function shareDayWithCurrent(day, currentActivityId) {
-    setPlan(p => attachDay(p, day, currentActivityId))
-  }
-
-  function unshareDay(day) {
-    setPlan(p => detachDay(p, day))
-  }
+  const updateActivity   = (id, patch) => setPlan(p => patchActivity(p, id, patch))
+  const shareDay         = (day, id)   => setPlan(p => attachDay(p, day, id))
+  const unshareDay       = (day)       => setPlan(p => detachDay(p, day))
 
   async function publish() {
-    setSaving(true)
-    setError(null)
+    setSaving(true); setError(null)
     try {
-      const updated = {
-        ...plan,
-        published: true,
-        dates: formatWeekRange(weekId),
-        weekNumber: weekNumberFromId(weekId),
-      }
+      const updated = { ...plan, published: true, dates: formatWeekRange(weekId), weekNumber: weekNumberFromId(weekId) }
       const res = await saveWeek(weekId, updated)
       setPlan(updated)
       setSavedInfo({ at: new Date(), persisted: res.persisted })
-
-      // Offer to notify members (avoids spamming on minor re-edits).
       if (confirm('Plan publicado.\n\n¿Mandar notificación push a los miembros?')) {
         const r = await broadcastNotification({
           title: 'Planificación disponible 🏔',
@@ -264,42 +241,26 @@ export default function PlanEditor() {
     if (!confirm(`¿Borrar plan de la semana ${formatWeekRange(weekId)}?`)) return
     try {
       await deleteWeek(weekId)
-      setPlan(defaultPlan(weekId))
-      setSavedInfo(null)
-    } catch (e) {
-      setError(e.message ?? 'Error borrando')
-    }
+      setPlan(defaultPlan(weekId)); setSavedInfo(null)
+    } catch (e) { setError(e.message ?? 'Error borrando') }
   }
 
-  function exportCsv() {
-    downloadText(`bandurrias-plan-${weekId}.csv`, planToCsv(plan))
-  }
-
+  function exportCsv() { downloadText(`bandurrias-plan-${weekId}.csv`, planToCsv(plan)) }
   async function importCsv(e) {
     const file = e.target.files?.[0]
-    e.target.value = '' // allow re-importing same file
+    e.target.value = ''
     if (!file) return
     try {
-      const text = await file.text()
-      const activities = csvToActivities(text)
+      const activities = csvToActivities(await file.text())
       if (!activities.length) { setError('CSV vacío o con formato inválido.'); return }
-      setPlan(p => ({ ...p, activities }))
-      setError(null)
-      setSavedInfo(null)
-    } catch (err) {
-      setError('No se pudo leer el CSV: ' + (err.message ?? ''))
-    }
+      setPlan(p => ({ ...p, activities })); setError(null); setSavedInfo(null)
+    } catch (err) { setError('No se pudo leer el CSV: ' + (err.message ?? '')) }
   }
-
-  // Render the plan (preview) then trigger the browser print dialog → Save as PDF.
-  function exportPdf() {
-    setPreview(true)
-    setTimeout(() => window.print(), 350)
-  }
+  function exportPdf() { setPreview(true); setTimeout(() => window.print(), 350) }
 
   if (!plan) {
     return (
-      <div className="flex items-center justify-center py-16">
+      <div className="flex items-center justify-center py-20">
         <div className="w-5 h-5 border-2 border-brand/20 border-t-brand rounded-full animate-spin" />
       </div>
     )
@@ -308,77 +269,55 @@ export default function PlanEditor() {
   const currentActivity = getActivityForDay(plan, activeDay)
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="max-w-5xl mx-auto flex flex-col gap-6">
+      <input ref={fileRef} type="file" accept=".csv,text/csv" onChange={importCsv} className="hidden" />
 
-      {/* Week picker */}
-      <WeekPicker weekId={weekId} setWeekId={setWeekIdSafe} />
+      {/* ── Action bar ── */}
+      <div className="no-print flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="min-w-0">
+          <h2 className="text-lg font-bold text-white leading-tight">Planificación semanal</h2>
+          <p className="text-xs text-slate-500 mt-0.5 capitalize">{formatWeekRange(weekId)}</p>
+        </div>
 
-      {/* Action bar */}
-      <div className="flex items-center gap-2 flex-wrap no-print">
-        {/* Export / import group */}
-        <input ref={fileRef} type="file" accept=".csv,text/csv" onChange={importCsv} className="hidden" />
-        <button
-          onClick={() => fileRef.current?.click()}
-          title="Importar un CSV exportado (usalo como plantilla de otra semana)"
-          className="flex items-center gap-1.5 bg-white/4 text-slate-300 border border-white/8 rounded-xl px-3 py-2.5 text-xs font-bold hover:bg-white/8 transition-all"
-        >
-          <FileUp size={13} /> Importar CSV
-        </button>
-        <button
-          onClick={exportCsv}
-          title="Exportar este plan como CSV reutilizable"
-          className="flex items-center gap-1.5 bg-white/4 text-slate-300 border border-white/8 rounded-xl px-3 py-2.5 text-xs font-bold hover:bg-white/8 transition-all"
-        >
-          <FileDown size={13} /> CSV
-        </button>
-        <button
-          onClick={exportPdf}
-          title="Exportar como PDF (abre el diálogo de impresión → Guardar como PDF)"
-          className="flex items-center gap-1.5 bg-white/4 text-slate-300 border border-white/8 rounded-xl px-3 py-2.5 text-xs font-bold hover:bg-white/8 transition-all"
-        >
-          <Printer size={13} /> PDF
-        </button>
-
-        <div className="flex-1" />
-
-        <button
-          onClick={() => setPreview(p => !p)}
-          className="flex items-center gap-1.5 bg-white/4 text-slate-300 border border-white/8 rounded-xl px-3 py-2.5 text-xs font-bold hover:bg-white/8 transition-all"
-        >
-          <Eye size={13} />
-          {preview ? 'Volver al editor' : 'Vista previa'}
-        </button>
-        <button
-          onClick={clear}
-          className="flex items-center gap-1.5 bg-red-500/10 text-red-400 border border-red-500/20 rounded-xl px-3 py-2.5 text-xs font-bold hover:bg-red-500/20 transition-all"
-        >
-          <Trash2 size={13} />
-          Borrar
-        </button>
-        <button
-          onClick={publish}
-          disabled={saving}
-          className="flex items-center gap-1.5 bg-brand text-black rounded-xl px-4 py-2.5 text-xs font-bold hover:bg-[#d4ff33] active:scale-95 transition-all disabled:opacity-50"
-        >
-          <Save size={13} />
-          {saving ? 'Guardando…' : 'Publicar'}
-        </button>
+        <div className="sm:ml-auto flex items-center gap-2">
+          {/* secondary actions */}
+          <div className="flex items-center gap-1.5">
+            <IconButton icon={FileUp}  label="Importar CSV" onClick={() => fileRef.current?.click()} />
+            <IconButton icon={FileDown} label="Exportar CSV" onClick={exportCsv} />
+            <IconButton icon={Printer}  label="Exportar PDF" onClick={exportPdf} />
+            <IconButton icon={Trash2}   label="Borrar plan"  onClick={clear} danger />
+          </div>
+          <div className="w-px h-6 bg-white/10 mx-0.5" />
+          <button
+            onClick={() => setPreview(p => !p)}
+            className="h-9 px-3 inline-flex items-center gap-1.5 rounded-lg border border-white/[0.08] bg-white/[0.03] text-slate-300 text-xs font-bold hover:bg-white/[0.08] hover:text-white transition-colors"
+          >
+            <Eye size={14} /> {preview ? 'Editor' : 'Vista previa'}
+          </button>
+          <button
+            onClick={publish}
+            disabled={saving}
+            className="h-9 px-4 inline-flex items-center gap-1.5 rounded-lg bg-brand text-black text-xs font-bold hover:bg-[#d4ff33] active:scale-95 transition-all disabled:opacity-50"
+          >
+            <Save size={14} /> {saving ? 'Guardando…' : 'Publicar'}
+          </button>
+        </div>
       </div>
 
+      {/* ── Banners ── */}
       {error && (
-        <div className="bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-2.5 text-xs text-red-300 font-semibold">
+        <div className="bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-2.5 text-sm text-red-300 font-medium">
           ⚠ {error}
         </div>
       )}
-
       {savedInfo && (
-        <div className="bg-brand/8 border border-brand/20 rounded-xl px-4 py-2.5 text-xs text-brand font-semibold flex items-center gap-2 flex-wrap">
+        <div className="bg-brand/8 border border-brand/20 rounded-xl px-4 py-2.5 text-sm text-brand font-semibold flex flex-wrap items-center gap-x-2">
           ✓ Publicado · {savedInfo.at.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
           <span className="text-slate-500 font-normal">
             {savedInfo.persisted === 'supabase'
-              ? '· Sincronizado en Supabase, visible para todos los miembros'
-              : '· Guardado localmente (solo este navegador en dev)'}
-            {savedInfo.pushed != null && ` · 🔔 ${savedInfo.pushed} notificaciones enviadas`}
+              ? '· Visible para todos los miembros'
+              : '· Guardado localmente (dev)'}
+            {savedInfo.pushed != null && ` · 🔔 ${savedInfo.pushed} enviadas`}
           </span>
         </div>
       )}
@@ -387,10 +326,8 @@ export default function PlanEditor() {
         <RocoWeekPlan week={plan} />
       ) : (
         <>
-          {/* Day tabs */}
+          <WeekPicker weekId={weekId} setWeekId={setWeekId} />
           <DayTabs plan={plan} activeDay={activeDay} setActiveDay={setActiveDay} />
-
-          {/* Active day editor */}
           {currentActivity && (
             <ActivityEditor
               key={currentActivity.id}
@@ -398,44 +335,41 @@ export default function PlanEditor() {
               activeDay={activeDay}
               plan={plan}
               onPatch={patch => updateActivity(currentActivity.id, patch)}
-              onShareDay={day => shareDayWithCurrent(day, currentActivity.id)}
-              onUnshareDay={day => unshareDay(day)}
+              onShareDay={day => shareDay(day, currentActivity.id)}
+              onUnshareDay={unshareDay}
             />
           )}
         </>
       )}
-
-      <FormStyle />
     </div>
   )
 }
 
-/* ── Week picker ──────────────────────────────────────────────────────── */
+/* ── Week picker ─────────────────────────────────────────────────────────── */
 
 function WeekPicker({ weekId, setWeekId }) {
   const presets = [
-    { key: 'this',  label: 'Esta semana',     value: getThisMondayId() },
-    { key: 'next',  label: 'Próxima semana',  value: getNextMondayId() },
-    { key: 'next2', label: 'En 2 semanas',    value: shiftWeek(getThisMondayId(), 2) },
+    { key: 'this',  label: 'Esta semana',    value: getThisMondayId() },
+    { key: 'next',  label: 'Próxima semana', value: getNextMondayId() },
+    { key: 'next2', label: 'En 2 semanas',   value: shiftWeek(getThisMondayId(), 2) },
   ]
   const active = presets.find(p => p.value === weekId)?.key
 
   return (
-    <div className="bg-card border border-white/8 rounded-2xl p-4 flex flex-col gap-3">
-      <div className="flex items-center gap-2 text-slate-400 text-[10px] font-bold uppercase tracking-widest">
-        <Calendar size={12} /> Semana a editar
-      </div>
-
-      {/* Presets */}
-      <div className="flex gap-2 flex-wrap">
+    <SectionCard
+      icon={Calendar}
+      title="Semana a editar"
+      desc="Se ajusta automáticamente al lunes de la semana elegida."
+    >
+      <div className="flex flex-wrap gap-1.5">
         {presets.map(p => (
           <button
             key={p.key}
             onClick={() => setWeekId(p.value)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+            className={`h-9 px-3.5 rounded-lg text-xs font-bold transition-colors ${
               active === p.key
                 ? 'bg-brand text-black'
-                : 'bg-white/5 text-slate-400 border border-white/8 hover:bg-white/10 hover:text-white'
+                : 'bg-white/[0.03] text-slate-400 border border-white/[0.06] hover:bg-white/[0.08] hover:text-white'
             }`}
           >
             {p.label}
@@ -443,59 +377,51 @@ function WeekPicker({ weekId, setWeekId }) {
         ))}
       </div>
 
-      {/* Custom date */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => setWeekId(shiftWeek(weekId, -1))}
+          className="h-10 w-10 shrink-0 rounded-lg bg-white/[0.03] border border-white/[0.06] text-slate-400 hover:text-white hover:bg-white/[0.08] transition-colors flex items-center justify-center"
+          title="Semana anterior"
+        >
+          <ChevronLeft size={16} />
+        </button>
         <input
           type="date"
           value={weekId}
           onChange={e => setWeekId(snapMonday(e.target.value))}
-          className="input flex-1"
+          className={`${INPUT} flex-1`}
         />
         <button
-          onClick={() => setWeekId(shiftWeek(weekId, -1))}
-          className="w-9 h-9 rounded-lg bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-all"
-          title="Semana anterior"
-        >
-          ←
-        </button>
-        <button
           onClick={() => setWeekId(shiftWeek(weekId, 1))}
-          className="w-9 h-9 rounded-lg bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-all"
+          className="h-10 w-10 shrink-0 rounded-lg bg-white/[0.03] border border-white/[0.06] text-slate-400 hover:text-white hover:bg-white/[0.08] transition-colors flex items-center justify-center"
           title="Semana siguiente"
         >
-          →
+          <ChevronRight size={16} />
         </button>
       </div>
-
-      <p className="text-slate-600 text-xs">
-        <span className="text-white font-semibold capitalize">{formatWeekRange(weekId)}</span> · Cualquier fecha se ajusta al lunes de la semana.
-      </p>
-    </div>
+    </SectionCard>
   )
 }
 
-/* ── Day tabs ──────────────────────────────────────────────────────────── */
+/* ── Day tabs (segmented) ────────────────────────────────────────────────── */
 
 function DayTabs({ plan, activeDay, setActiveDay }) {
   return (
-    <div className="flex gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none]">
+    <div className="flex gap-1 p-1 rounded-xl bg-black/20 border border-white/[0.06] overflow-x-auto [scrollbar-width:none]">
       {DAY_KEYS.map(d => {
         const a = getActivityForDay(plan, d)
         const type = a?.badge?.type ?? 'rest'
-        const dot = TYPE_BG[type]?.dot ?? TYPE_BG.rest.dot
         const isActive = d === activeDay
         return (
           <button
             key={d}
             onClick={() => setActiveDay(d)}
-            className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl text-xs font-bold transition-all shrink-0 min-w-16 ${
-              isActive
-                ? 'bg-card border border-brand/40 text-white'
-                : 'bg-white/4 border border-white/8 text-slate-400 hover:text-white hover:bg-white/8'
+            className={`flex-1 min-w-[52px] flex flex-col items-center gap-1.5 px-2 py-2.5 rounded-lg text-xs font-bold transition-colors ${
+              isActive ? 'bg-card text-white shadow-sm shadow-black/40' : 'text-slate-500 hover:text-slate-300'
             }`}
           >
             <span className="uppercase tracking-wide">{DAY_ABBREV[d]}</span>
-            <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />
+            <span className={`h-1.5 w-1.5 rounded-full ${TYPE_BG[type].dot}`} />
           </button>
         )
       })}
@@ -503,437 +429,417 @@ function DayTabs({ plan, activeDay, setActiveDay }) {
   )
 }
 
-/* ── Activity editor ───────────────────────────────────────────────────── */
+/* ── Activity editor ─────────────────────────────────────────────────────── */
 
 function ActivityEditor({ activity, activeDay, plan, onPatch, onShareDay, onUnshareDay }) {
   const isRest = activity.rest || activity.badge?.type === 'rest'
   const dayLabel = activity.days.length > 1
     ? activity.days.map(d => DAY_NAME[d]).join(' / ')
     : DAY_NAME[activity.days[0]]
+  const typeColor = TYPE_BG[activity.badge?.type ?? 'rest']
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,340px)_1fr] gap-5 items-start">
 
-      {/* Day-share panel */}
-      <div className="bg-card border border-white/8 rounded-2xl p-4 flex flex-col gap-3">
-        <div className="flex items-center gap-2 text-slate-400 text-[10px] font-bold uppercase tracking-widest">
-          Esta sesión se repite los días
-        </div>
-        <div className="flex gap-1.5 flex-wrap">
-          {DAY_KEYS.map(d => {
-            const sharesHere   = activity.days.includes(d)
-            const isCurrentDay = d === activeDay
-            const otherActivity = !sharesHere ? getActivityForDay(plan, d) : null
-            const otherLabel = otherActivity ? TYPE_LABELS[otherActivity.badge?.type] : null
+      {/* ── Left column: configuración ── */}
+      <div className="flex flex-col gap-5">
+        <SectionCard
+          title={dayLabel}
+          titleRight={
+            <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md border ${typeColor.tag}`}>
+              {TYPE_OPTIONS.find(o => o.key === (activity.badge?.type ?? 'rest'))?.label}
+            </span>
+          }
+        >
+          <Field label="Tipo de sesión">
+            <TypeSelector activity={activity} onPatch={onPatch} />
+          </Field>
 
-            return (
-              <button
-                key={d}
-                onClick={() => {
-                  if (sharesHere && !isCurrentDay) onUnshareDay(d)
-                  else if (!sharesHere) onShareDay(d)
-                }}
-                disabled={isCurrentDay && sharesHere}
-                title={
-                  isCurrentDay && sharesHere ? 'Día actual (no se puede sacar desde acá)'
-                    : sharesHere               ? 'Sacar este día de la sesión'
-                    : `Compartir con ${DAY_NAME[d]}${otherLabel ? ` (actualmente: ${otherLabel})` : ''}`
-                }
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all border ${
-                  sharesHere
-                    ? 'bg-brand/15 text-brand border-brand/40'
-                    : 'bg-white/4 text-slate-500 border-white/8 hover:text-white hover:border-white/20'
-                } ${isCurrentDay && sharesHere ? 'opacity-100' : ''}`}
-              >
-                {sharesHere && '✓'}
-                {DAY_ABBREV[d]}
-              </button>
-            )
-          })}
-        </div>
-        <p className="text-slate-600 text-[11px]">
-          Hacé click en otro día para que tenga la <strong className="text-slate-400">misma sesión</strong> (con horarios que vos definís por día). Al sacarlo, ese día vuelve a tener su propia sesión por defecto.
-        </p>
-      </div>
-
-      {/* Editor card */}
-      <div className={`bg-card border rounded-2xl p-5 flex flex-col gap-4 ${
-        isRest ? 'border-white/10 opacity-95' : 'border-white/8'
-      }`}>
-        <div className="flex items-center justify-between gap-3 pb-3 border-b border-white/5">
-          <p className="text-white font-black text-base sm:text-lg tracking-wide uppercase">{dayLabel}</p>
-          <TypeSelect activity={activity} onPatch={onPatch} />
-        </div>
-
-        {/* Badge label */}
-        <Field label="Nombre de la sesión (etiqueta visible)">
-          <input
-            type="text"
-            value={activity.badge?.label ?? ''}
-            onChange={e => onPatch({ badge: { ...activity.badge, label: e.target.value } })}
-            placeholder={TYPE_LABELS[activity.badge?.type] ?? ''}
-            className="input"
-          />
-        </Field>
-
-        {/* Custom dayLabel override */}
-        {activity.days.length === 1 && activity.days[0] === 'sab' && (
-          <Field label='Título personalizado (opcional, ej "Sábado — Fondo de Montaña")'>
+          <Field label="Nombre visible">
             <input
               type="text"
-              value={activity.dayLabel ?? ''}
-              onChange={e => onPatch({ dayLabel: e.target.value || undefined })}
-              placeholder={dayLabel}
-              className="input"
+              value={activity.badge?.label ?? ''}
+              onChange={e => onPatch({ badge: { ...activity.badge, label: e.target.value } })}
+              placeholder={TYPE_LABELS[activity.badge?.type] ?? ''}
+              className={INPUT}
             />
           </Field>
-        )}
 
-        {/* Branch: rest vs training */}
-        {isRest
-          ? <RestEditor activity={activity} onPatch={onPatch} />
-          : <TrainingEditor activity={activity} activeDay={activeDay} onPatch={onPatch} />
-        }
+          {activity.days.length === 1 && activity.days[0] === 'sab' && (
+            <Field label="Título personalizado" hint='Ej: "Sábado — Fondo de Montaña"'>
+              <input
+                type="text"
+                value={activity.dayLabel ?? ''}
+                onChange={e => onPatch({ dayLabel: e.target.value || undefined })}
+                placeholder={dayLabel}
+                className={INPUT}
+              />
+            </Field>
+          )}
+
+          <Field label="Se repite los días" hint="Tocá un día para que comparta esta misma sesión. Los horarios se cargan por día.">
+            <div className="grid grid-cols-7 gap-1">
+              {DAY_KEYS.map(d => {
+                const sharesHere   = activity.days.includes(d)
+                const isCurrentDay = d === activeDay
+                const other = !sharesHere ? getActivityForDay(plan, d) : null
+                return (
+                  <button
+                    key={d}
+                    onClick={() => {
+                      if (sharesHere && !isCurrentDay) onUnshareDay(d)
+                      else if (!sharesHere) onShareDay(d)
+                    }}
+                    disabled={isCurrentDay && sharesHere}
+                    title={
+                      isCurrentDay && sharesHere ? 'Día actual'
+                        : sharesHere ? 'Sacar de esta sesión'
+                        : `Compartir con ${DAY_NAME[d]}${other ? ` (hoy: ${TYPE_LABELS[other.badge?.type]})` : ''}`
+                    }
+                    className={`h-9 rounded-md text-[11px] font-bold uppercase transition-colors ${
+                      sharesHere
+                        ? 'bg-brand/15 text-brand border border-brand/40'
+                        : 'bg-white/[0.03] text-slate-500 border border-white/[0.06] hover:text-white hover:bg-white/[0.08]'
+                    } ${isCurrentDay && sharesHere ? 'ring-1 ring-brand/30' : ''}`}
+                  >
+                    {DAY_ABBREV[d]}
+                  </button>
+                )
+              })}
+            </div>
+          </Field>
+        </SectionCard>
+
+        {!isRest && (
+          <SectionCard icon={Clock} title="Horarios" desc="Turnos por día — el corredor elige uno.">
+            <div className="flex flex-col gap-3">
+              {activity.days.map(day => (
+                <TurnosForDay
+                  key={day}
+                  day={day}
+                  turnos={activity.turnos.filter(t => t.day === day)}
+                  isActive={day === activeDay}
+                  onChange={dayTurnos => {
+                    const others = activity.turnos.filter(t => t.day !== day)
+                    onPatch({ turnos: [...others, ...dayTurnos] })
+                  }}
+                />
+              ))}
+            </div>
+
+            <Field label="Nota junto al horario">
+              <input
+                type="text"
+                value={activity.turnoNote ?? ''}
+                onChange={e => onPatch({ turnoNote: e.target.value })}
+                placeholder="→ el corredor elige UN turno"
+                className={INPUT}
+              />
+              <Check
+                checked={activity.turnoNoteColor === 'orange'}
+                onChange={v => onPatch({ turnoNoteColor: v ? 'orange' : null })}
+                label="Resaltar en naranja (aviso)"
+              />
+            </Field>
+          </SectionCard>
+        )}
+      </div>
+
+      {/* ── Right column: contenido ── */}
+      <div className="flex flex-col gap-5">
+        {isRest ? (
+          <RestEditor activity={activity} onPatch={onPatch} />
+        ) : (
+          <>
+            <SectionCard icon={MapPin} title="Punto de encuentro">
+              <Field label="Lugar">
+                <input
+                  type="text"
+                  value={activity.meetpoint?.text ?? ''}
+                  onChange={e => onPatch({ meetpoint: { ...activity.meetpoint, text: e.target.value } })}
+                  placeholder="La Usina · Virgen de las Nieves"
+                  className={INPUT}
+                />
+              </Field>
+              <Field label="Link de Google Maps">
+                <input
+                  type="url"
+                  value={activity.meetpoint?.url ?? ''}
+                  onChange={e => onPatch({ meetpoint: { ...activity.meetpoint, url: e.target.value } })}
+                  placeholder="https://maps.google.com/..."
+                  className={INPUT}
+                />
+              </Field>
+              <Check
+                checked={!!activity.meetpoint?.pending}
+                onChange={v => onPatch({ meetpoint: { ...activity.meetpoint, pending: v } })}
+                icon={<AlertTriangle size={13} className="text-orange-400" />}
+                label="Punto a confirmar (muestra aviso en vez del lugar)"
+              />
+            </SectionCard>
+
+            <SectionCard title="Plan de la sesión">
+              <Field label="Objetivo">
+                <textarea
+                  value={activity.objective ?? ''}
+                  onChange={e => onPatch({ objective: e.target.value })}
+                  rows={2}
+                  placeholder="Qué se busca con esta sesión"
+                  className={AREA}
+                />
+              </Field>
+              <Field label="Actividades">
+                <RepeatableList
+                  items={activity.activities}
+                  placeholder="Ej: 6×400m al 95% con recup. 90s"
+                  onChange={items => onPatch({ activities: items })}
+                  addLabel="Agregar actividad"
+                />
+              </Field>
+              <Field label="Observación">
+                <input
+                  type="text"
+                  value={activity.note?.text ?? ''}
+                  onChange={e => {
+                    const text = e.target.value
+                    onPatch({ note: text.trim() ? { strong: activity.note?.strong ?? 'Nota:', text } : null })
+                  }}
+                  placeholder="Ej: si llueve fuerte se suspende"
+                  className={INPUT}
+                />
+              </Field>
+            </SectionCard>
+
+            <SectionCard title="Por nivel" desc="Variantes según el corredor. Opcional.">
+              <div className="flex flex-col gap-2">
+                {activity.niveles.map(n => (
+                  <div key={n.type} className="flex items-center gap-2">
+                    <span className={`shrink-0 w-14 text-center text-[10px] font-black uppercase rounded-md py-2.5 ${
+                      n.type === 'ini' ? 'bg-blue-500/15 text-blue-400'
+                      : n.type === 'med' ? 'bg-yellow-500/15 text-yellow-400'
+                      : 'bg-red-500/15 text-red-400'
+                    }`}>
+                      {n.type}
+                    </span>
+                    <input
+                      type="text"
+                      value={n.text}
+                      onChange={e => onPatch({ niveles: activity.niveles.map(x => x.type === n.type ? { ...x, text: e.target.value } : x) })}
+                      className={`${INPUT} flex-1`}
+                    />
+                  </div>
+                ))}
+              </div>
+              <Field label="Duración / volumen">
+                <input
+                  type="text"
+                  value={activity.durationLabel ?? ''}
+                  onChange={e => onPatch({ durationLabel: e.target.value })}
+                  placeholder="Ej: 90–100 min · 12-16 km"
+                  className={INPUT}
+                />
+              </Field>
+            </SectionCard>
+          </>
+        )}
       </div>
     </div>
   )
 }
 
-/* ── Type selector ─────────────────────────────────────────────────────── */
+/* ── Type selector (segmented) ───────────────────────────────────────────── */
 
-function TypeSelect({ activity, onPatch }) {
+function TypeSelector({ activity, onPatch }) {
   const type = activity.badge?.type ?? 'rest'
+  function pick(next) {
+    if (next === type) return
+    if (next === 'rest') {
+      onPatch({ rest: true, badge: { type: 'rest', label: 'Descanso' }, restBody: activity.restBody ?? { title: 'Descanso', lines: [''] } })
+    } else {
+      onPatch({ rest: false, badge: { type: next, label: activity.badge?.label?.length ? activity.badge.label : TYPE_LABELS[next] } })
+    }
+  }
   return (
-    <select
-      value={type}
-      onChange={e => {
-        const next = e.target.value
-        if (next === 'rest') {
-          onPatch({
-            rest: true,
-            badge: { type: 'rest', label: 'Descanso' },
-            restBody: activity.restBody ?? { title: 'Descanso', lines: [''] },
-          })
-        } else {
-          onPatch({
-            rest: false,
-            badge: { type: next, label: activity.badge?.label?.length > 0 ? activity.badge.label : TYPE_LABELS[next] },
-          })
-        }
-      }}
-      className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1.5 rounded-lg cursor-pointer focus:outline-none border ${TYPE_BG[type]?.tag ?? TYPE_BG.rest.tag}`}
-    >
-      <option value="quality">Calidad · Aeróbico</option>
-      <option value="hills">Cuesta · Fuerza</option>
-      <option value="fondazo">Fondo de Montaña</option>
-      <option value="rest">Descanso</option>
-    </select>
-  )
-}
-
-/* ── Training editor ───────────────────────────────────────────────────── */
-
-function TrainingEditor({ activity, activeDay, onPatch }) {
-  function setActivityItem(i, text) {
-    const next = activity.activities.map((a, idx) => idx === i ? text : a)
-    onPatch({ activities: next })
-  }
-  function addActivityItem() { onPatch({ activities: [...activity.activities, ''] }) }
-  function removeActivityItem(i) { onPatch({ activities: activity.activities.filter((_, idx) => idx !== i) }) }
-
-  function setNivel(type, text) {
-    const next = activity.niveles.map(n => n.type === type ? { ...n, text } : n)
-    onPatch({ niveles: next })
-  }
-  function setMeetpoint(patch) { onPatch({ meetpoint: { ...activity.meetpoint, ...patch } }) }
-  function setObservation(text) {
-    if (!text.trim()) { onPatch({ note: null }); return }
-    onPatch({ note: { strong: activity.note?.strong ?? 'Nota:', text } })
-  }
-
-  return (
-    <>
-      {/* Turnos per day */}
-      <Field label={`Horarios (turnos por día — el corredor elige uno)`}>
-        <div className="flex flex-col gap-3">
-          {activity.days.map(day => (
-            <TurnosForDay
-              key={day}
-              day={day}
-              turnos={activity.turnos.filter(t => t.day === day)}
-              isActive={day === activeDay}
-              onChange={dayTurnos => {
-                const others = activity.turnos.filter(t => t.day !== day)
-                onPatch({ turnos: [...others, ...dayTurnos] })
-              }}
-            />
-          ))}
-        </div>
-      </Field>
-
-      <Field label='Nota junto al horario (ej: "→ el corredor elige UN turno")'>
-        <input
-          type="text"
-          value={activity.turnoNote ?? ''}
-          onChange={e => onPatch({ turnoNote: e.target.value })}
-          className="input"
-        />
-        <label className="flex items-center gap-2 text-xs text-slate-400 select-none cursor-pointer mt-2">
-          <input
-            type="checkbox"
-            checked={activity.turnoNoteColor === 'orange'}
-            onChange={e => onPatch({ turnoNoteColor: e.target.checked ? 'orange' : null })}
-            className="accent-brand"
-          />
-          Resaltar nota en naranja (aviso)
-        </label>
-      </Field>
-
-      {/* Meetpoint */}
-      <Field label="Punto de encuentro">
-        <div className="flex flex-col gap-2">
-          <input
-            type="text"
-            value={activity.meetpoint?.text ?? ''}
-            onChange={e => setMeetpoint({ text: e.target.value })}
-            placeholder="La Usina · Virgen de las Nieves"
-            className="input"
-          />
-          <input
-            type="url"
-            value={activity.meetpoint?.url ?? ''}
-            onChange={e => setMeetpoint({ url: e.target.value })}
-            placeholder="https://goo.gl/maps/... (link a Google Maps)"
-            className="input"
-          />
-          <label className="flex items-center gap-2 text-xs text-slate-400 select-none cursor-pointer">
-            <input
-              type="checkbox"
-              checked={!!activity.meetpoint?.pending}
-              onChange={e => setMeetpoint({ pending: e.target.checked })}
-              className="accent-brand"
-            />
-            <AlertTriangle size={12} className="text-orange-400" />
-            Aviso pendiente (resalta en naranja, ej "⚠️ Punto de encuentro a confirmar")
-          </label>
-        </div>
-      </Field>
-
-      <Field label="Objetivo de la sesión">
-        <textarea
-          value={activity.objective ?? ''}
-          onChange={e => onPatch({ objective: e.target.value })}
-          rows={2}
-          className="input resize-none"
-        />
-      </Field>
-
-      <Field label={activity.structureLabel ?? 'Actividades'}>
-        <div className="flex flex-col gap-2">
-          {activity.activities.map((a, i) => (
-            <div key={i} className="flex items-start gap-2">
-              <textarea
-                value={a}
-                onChange={e => setActivityItem(i, e.target.value)}
-                rows={1}
-                className="input flex-1 resize-none"
-              />
-              <button
-                onClick={() => removeActivityItem(i)}
-                className="w-8 h-8 rounded-lg bg-white/4 text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all flex items-center justify-center shrink-0"
-                title="Quitar"
-              >
-                <Trash2 size={13} />
-              </button>
-            </div>
-          ))}
+    <div className="grid grid-cols-2 gap-1.5">
+      {TYPE_OPTIONS.map(o => {
+        const active = o.key === type
+        const c = TYPE_BG[o.key]
+        return (
           <button
-            onClick={addActivityItem}
-            className="flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-brand border border-dashed border-white/8 hover:border-brand/30 rounded-xl py-2 transition-all"
+            key={o.key}
+            onClick={() => pick(o.key)}
+            className={`h-9 inline-flex items-center justify-center gap-1.5 rounded-lg text-xs font-bold border transition-colors ${
+              active ? c.tag : 'bg-white/[0.03] text-slate-400 border-white/[0.06] hover:text-white hover:bg-white/[0.08]'
+            }`}
           >
-            <Plus size={13} /> Agregar actividad
+            <span className={`h-1.5 w-1.5 rounded-full ${c.dot}`} /> {o.label}
           </button>
-        </div>
-      </Field>
-
-      <Field label="Observación (aparece como nota amarilla)">
-        <textarea
-          value={activity.note?.text ?? ''}
-          onChange={e => setObservation(e.target.value)}
-          rows={2}
-          placeholder="Ej: Progresión S1 → S2: el terreno cambia y el volumen sube..."
-          className="input resize-none"
-        />
-        {activity.note && (
-          <input
-            type="text"
-            value={activity.note.strong ?? ''}
-            onChange={e => onPatch({ note: { ...activity.note, strong: e.target.value } })}
-            placeholder='Título en negrita (ej: "Progresión S1 → S2:")'
-            className="input mt-2"
-          />
-        )}
-      </Field>
-
-      <Field label="Por nivel">
-        <div className="flex flex-col gap-2">
-          {['ini','med','avz'].map(k => {
-            const cur = activity.niveles.find(n => n.type === k)
-            const labels = { ini: 'Inicial', med: 'Medio', avz: 'Avanzado' }
-            const tagCls = {
-              ini: 'bg-blue-500/15 text-blue-400 border-blue-500/40',
-              med: 'bg-yellow-500/12 text-yellow-400 border-yellow-500/40',
-              avz: 'bg-red-500/12 text-red-400 border-red-500/40',
-            }[k]
-            return (
-              <div key={k} className="flex items-start gap-2">
-                <span className={`shrink-0 text-[10px] font-bold uppercase tracking-widest px-2 py-1.5 rounded-lg border ${tagCls} w-20 text-center`}>
-                  {labels[k]}
-                </span>
-                <textarea
-                  value={cur?.text ?? ''}
-                  onChange={e => setNivel(k, e.target.value)}
-                  rows={2}
-                  className="input flex-1 resize-none"
-                />
-              </div>
-            )
-          })}
-        </div>
-      </Field>
-
-      <Field label="Duración total (ej: 90 – 100 min)">
-        <input
-          type="text"
-          value={activity.durationLabel ?? ''}
-          onChange={e => onPatch({ durationLabel: e.target.value })}
-          className="input"
-        />
-      </Field>
-    </>
+        )
+      })}
+    </div>
   )
 }
+
+/* ── Turnos editor ───────────────────────────────────────────────────────── */
 
 function TurnosForDay({ day, turnos, isActive, onChange }) {
-  function setTurno(i, text) { onChange(turnos.map((t, idx) => idx === i ? { day, text } : t)) }
-  function addTurno() { onChange([...turnos, { day, text: '⏰ 18hs' }]) }
-  function removeTurno(i) { onChange(turnos.filter((_, idx) => idx !== i)) }
+  const setTurno   = (i, text) => onChange(turnos.map((t, idx) => idx === i ? { day, text } : t))
+  const addTurno   = () => onChange([...turnos, { day, text: '' }])
+  const removeTurno = (i) => onChange(turnos.filter((_, idx) => idx !== i))
 
   return (
-    <div className={`rounded-xl border p-3 flex flex-col gap-2 ${
-      isActive ? 'border-brand/30 bg-brand/[0.03]' : 'border-white/8'
-    }`}>
-      <div className="flex items-center justify-between">
-        <p className="text-xs font-bold uppercase tracking-widest text-slate-400">{DAY_NAME[day]}</p>
-        {isActive && <span className="text-[10px] text-brand font-semibold">Día activo</span>}
+    <div className={`rounded-xl p-3 transition-colors ${isActive ? 'bg-brand/[0.04] ring-1 ring-brand/20' : 'bg-black/15'}`}>
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">{DAY_NAME[day]}</span>
+        {isActive && <span className="text-[10px] text-brand font-bold uppercase">día activo</span>}
       </div>
-      {turnos.length === 0 && (
-        <p className="text-slate-600 text-[11px] italic">Sin turnos. Agregá uno abajo.</p>
-      )}
-      {turnos.map((t, i) => (
-        <div key={i} className="flex items-center gap-2">
-          <input
-            type="text"
-            value={t.text}
-            onChange={e => setTurno(i, e.target.value)}
-            placeholder="⏰ 18hs"
-            className="input flex-1"
-          />
-          <button
-            onClick={() => removeTurno(i)}
-            className="w-8 h-8 rounded-lg bg-white/4 text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all flex items-center justify-center shrink-0"
-            title="Quitar turno"
-          >
-            <Trash2 size={13} />
-          </button>
-        </div>
-      ))}
-      <button
-        onClick={addTurno}
-        className="flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-brand border border-dashed border-white/8 hover:border-brand/30 rounded-lg py-1.5 transition-all"
-      >
-        <Plus size={12} /> Agregar turno {DAY_NAME[day]}
-      </button>
+      <div className="flex flex-col gap-2">
+        {turnos.map((t, i) => (
+          <div key={i} className="flex items-center gap-2">
+            <input
+              type="text"
+              value={t.text}
+              onChange={e => setTurno(i, e.target.value)}
+              placeholder="⏰ 18hs"
+              className={`${INPUT} flex-1`}
+            />
+            <RemoveBtn onClick={() => removeTurno(i)} />
+          </div>
+        ))}
+        <AddBtn onClick={addTurno} label="Agregar horario" />
+      </div>
     </div>
   )
 }
 
-/* ── Rest editor ───────────────────────────────────────────────────────── */
+/* ── Rest editor ─────────────────────────────────────────────────────────── */
 
 function RestEditor({ activity, onPatch }) {
-  function setRestBody(patch) { onPatch({ restBody: { ...activity.restBody, ...patch } }) }
-  function setLine(i, text) {
-    const lines = (activity.restBody?.lines ?? []).map((l, idx) => idx === i ? text : l)
-    setRestBody({ lines })
-  }
-  function addLine() { setRestBody({ lines: [...(activity.restBody?.lines ?? []), ''] }) }
-  function removeLine(i) { setRestBody({ lines: (activity.restBody?.lines ?? []).filter((_, idx) => idx !== i) }) }
+  const setRest  = (patch) => onPatch({ restBody: { ...activity.restBody, ...patch } })
+  const lines    = activity.restBody?.lines ?? []
 
   return (
-    <>
+    <SectionCard title="Descanso" desc="Sin turnos. Aparece atenuado en la grilla.">
       <Field label="Título">
         <input
           type="text"
           value={activity.restBody?.title ?? ''}
-          onChange={e => setRestBody({ title: e.target.value })}
+          onChange={e => setRest({ title: e.target.value })}
           placeholder="Ej: Recuperación activa opcional"
-          className="input"
+          className={INPUT}
         />
       </Field>
-
-      <Field label="Detalle (una línea por idea)">
-        <div className="flex flex-col gap-2">
-          {(activity.restBody?.lines ?? []).map((l, i) => (
-            <div key={i} className="flex items-start gap-2">
-              <input
-                type="text"
-                value={l}
-                onChange={e => setLine(i, e.target.value)}
-                className="input flex-1"
-              />
-              <button
-                onClick={() => removeLine(i)}
-                className="w-8 h-8 rounded-lg bg-white/4 text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all flex items-center justify-center shrink-0"
-              >
-                <Trash2 size={13} />
-              </button>
-            </div>
-          ))}
-          <button
-            onClick={addLine}
-            className="flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-brand border border-dashed border-white/8 hover:border-brand/30 rounded-xl py-2 transition-all"
-          >
-            <Plus size={13} /> Agregar línea
-          </button>
-        </div>
+      <Field label="Detalle">
+        <RepeatableList
+          items={lines}
+          placeholder="Una línea por idea"
+          onChange={next => setRest({ lines: next })}
+          addLabel="Agregar línea"
+        />
       </Field>
-    </>
+    </SectionCard>
   )
 }
 
-function Field({ label, children }) {
+/* ── Reusable primitives ─────────────────────────────────────────────────── */
+
+function SectionCard({ icon: Icon, title, desc, titleRight, children }) {
+  return (
+    <section className="bg-card/70 border border-white/[0.06] rounded-2xl shadow-sm shadow-black/20">
+      {(title || titleRight) && (
+        <header className="flex items-start justify-between gap-3 px-5 pt-4 pb-3 border-b border-white/[0.05]">
+          <div className="flex items-start gap-2.5 min-w-0">
+            {Icon && (
+              <span className="mt-0.5 h-7 w-7 shrink-0 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center text-slate-400">
+                <Icon size={14} />
+              </span>
+            )}
+            <div className="min-w-0">
+              <h3 className="text-sm font-semibold text-white truncate">{title}</h3>
+              {desc && <p className="text-xs text-slate-500 mt-0.5">{desc}</p>}
+            </div>
+          </div>
+          {titleRight}
+        </header>
+      )}
+      <div className="px-5 py-4 flex flex-col gap-4">{children}</div>
+    </section>
+  )
+}
+
+function Field({ label, hint, children }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">{label}</label>
+      {label && <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{label}</label>}
       {children}
+      {hint && <p className="text-[11px] text-slate-600 leading-relaxed">{hint}</p>}
     </div>
   )
 }
 
-function FormStyle() {
+function RepeatableList({ items, placeholder, onChange, addLabel }) {
+  const set    = (i, v) => onChange(items.map((x, idx) => idx === i ? v : x))
+  const add    = () => onChange([...items, ''])
+  const remove = (i) => onChange(items.filter((_, idx) => idx !== i))
   return (
-    <style>{`
-      .input {
-        background: #060810;
-        color: #fff;
-        border-radius: 0.75rem;
-        padding: 0.625rem 0.75rem;
-        font-size: 0.875rem;
-        border: 1px solid rgba(255,255,255,0.08);
-        width: 100%;
-      }
-      .input::placeholder { color: #475569; }
-      .input:focus { outline: none; border-color: rgba(198,255,0,0.4); }
-    `}</style>
+    <div className="flex flex-col gap-2">
+      {items.map((item, i) => (
+        <div key={i} className="flex items-center gap-2">
+          <input type="text" value={item} onChange={e => set(i, e.target.value)} placeholder={placeholder} className={`${INPUT} flex-1`} />
+          <RemoveBtn onClick={() => remove(i)} />
+        </div>
+      ))}
+      <AddBtn onClick={add} label={addLabel} />
+    </div>
+  )
+}
+
+function IconButton({ icon: Icon, label, onClick, danger }) {
+  return (
+    <button
+      onClick={onClick}
+      title={label}
+      aria-label={label}
+      className={`h-9 w-9 flex items-center justify-center rounded-lg border transition-colors ${
+        danger
+          ? 'border-white/[0.06] bg-white/[0.03] text-slate-400 hover:text-red-400 hover:bg-red-500/10 hover:border-red-500/20'
+          : 'border-white/[0.06] bg-white/[0.03] text-slate-400 hover:text-white hover:bg-white/[0.08]'
+      }`}
+    >
+      <Icon size={15} />
+    </button>
+  )
+}
+
+function RemoveBtn({ onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      aria-label="Quitar"
+      className="h-10 w-10 shrink-0 rounded-lg bg-white/[0.03] border border-white/[0.06] text-slate-500 hover:text-red-400 hover:bg-red-500/10 hover:border-red-500/20 transition-colors flex items-center justify-center"
+    >
+      <Trash2 size={14} />
+    </button>
+  )
+}
+
+function AddBtn({ onClick, label }) {
+  return (
+    <button
+      onClick={onClick}
+      className="h-10 inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-brand border border-dashed border-white/10 hover:border-brand/30 rounded-lg transition-colors"
+    >
+      <Plus size={14} /> {label}
+    </button>
+  )
+}
+
+function Check({ checked, onChange, label, icon }) {
+  return (
+    <label className="flex items-center gap-2 text-xs text-slate-400 select-none cursor-pointer">
+      <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} className="accent-brand h-3.5 w-3.5" />
+      {icon}
+      {label}
+    </label>
   )
 }
