@@ -127,6 +127,7 @@ export function csvToActivities(csvText) {
       return {
         ...base,
         rest: true,
+        turnos: [],
         restBody: {
           title: get(row, 'rest_title'),
           lines: splitList(get(row, 'rest_lines')),

@@ -163,12 +163,12 @@ function attachDay(plan, day, targetActivityId) {
       if (!a.days.includes(day)) {
         const days = [...a.days, day].sort((x, y) => DAY_KEYS.indexOf(x) - DAY_KEYS.indexOf(y))
         const newTurnos = (DEFAULT_TIMES_BY_DAY[day] ?? []).map(text => ({ day, text }))
-        return { ...a, days, turnos: [...a.turnos, ...newTurnos] }
+        return { ...a, days, turnos: [...(a.turnos ?? []), ...newTurnos] }
       }
       return a
     }
     if (a.days.includes(day)) {
-      return { ...a, days: a.days.filter(d => d !== day), turnos: a.turnos.filter(t => t.day !== day) }
+      return { ...a, days: a.days.filter(d => d !== day), turnos: (a.turnos ?? []).filter(t => t.day !== day) }
     }
     return a
   }))
@@ -176,7 +176,7 @@ function attachDay(plan, day, targetActivityId) {
 function detachDay(plan, day) {
   const stripped = withActivities(plan, acts => acts.map(a =>
     a.days.includes(day)
-      ? { ...a, days: a.days.filter(d => d !== day), turnos: a.turnos.filter(t => t.day !== day) }
+      ? { ...a, days: a.days.filter(d => d !== day), turnos: (a.turnos ?? []).filter(t => t.day !== day) }
       : a
   ))
   return { ...stripped, activities: [...stripped.activities, defaultActivityForDay(day)] }
@@ -212,7 +212,13 @@ export default function PlanEditor() {
 
   const updateActivity   = (id, patch) => setPlan(p => patchActivity(p, id, patch))
   const shareDay         = (day, id)   => setPlan(p => attachDay(p, day, id))
-  const unshareDay       = (day)       => setPlan(p => detachDay(p, day))
+  const unshareDay       = (day)       => {
+    if (day === activeDay) {
+      const sibling = getActivityForDay(plan, day)?.days.find(d => d !== day)
+      if (sibling) setActiveDay(sibling)
+    }
+    setPlan(p => detachDay(p, day))
+  }
 
   async function publish() {
     setSaving(true); setError(null)
@@ -482,18 +488,19 @@ function ActivityEditor({ activity, activeDay, plan, onPatch, onShareDay, onUnsh
               {DAY_KEYS.map(d => {
                 const sharesHere   = activity.days.includes(d)
                 const isCurrentDay = d === activeDay
+                const isSoleDay    = isCurrentDay && activity.days.length === 1
                 const other = !sharesHere ? getActivityForDay(plan, d) : null
                 return (
                   <button
                     key={d}
                     onClick={() => {
-                      if (sharesHere && !isCurrentDay) onUnshareDay(d)
-                      else if (!sharesHere) onShareDay(d)
+                      if (sharesHere) { if (!isSoleDay) onUnshareDay(d) }
+                      else onShareDay(d)
                     }}
-                    disabled={isCurrentDay && sharesHere}
+                    disabled={isSoleDay}
                     title={
-                      isCurrentDay && sharesHere ? 'Día actual'
-                        : sharesHere ? 'Sacar de esta sesión'
+                      isSoleDay ? 'Día actual — cambiá el tipo a Descanso para feriado'
+                        : sharesHere ? 'Sacar de esta sesión (queda en su propio día)'
                         : `Compartir con ${DAY_NAME[d]}${other ? ` (hoy: ${TYPE_LABELS[other.badge?.type]})` : ''}`
                     }
                     className={`h-9 rounded-md text-[11px] font-bold uppercase transition-colors ${
