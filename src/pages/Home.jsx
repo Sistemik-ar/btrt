@@ -30,6 +30,12 @@ const BADGE_STYLE = {
   rest:    { bg: 'bg-white/5',       text: 'text-slate-500'  },
 }
 
+// Roster names sometimes fall back to the email (no display name set). Strip the domain.
+function cleanName(name) {
+  if (!name) return name
+  return name.includes('@') ? name.split('@')[0] : name
+}
+
 export default function Home() {
   const { user, profile } = useAuth()
   const [week, setWeek]     = useState(null)
@@ -38,9 +44,10 @@ export default function Home() {
   const [roster, setRoster] = useState({})
   const weekId = getDisplayWeekId()
   const isSunday = new Date().getDay() === 0
-  // DB-backed per-user flag (members.password_set). Only show once profile loaded.
-  const showPwBanner = profile && profile.password_set !== true
-  const myName = profile?.name || user?.email?.split('@')[0] || 'Vos'
+  // Only email/magic-link users need a password. OAuth (Google) users never do.
+  const provider = user?.app_metadata?.provider
+  const showPwBanner = profile && profile.password_set !== true && provider === 'email'
+  const myName = cleanName(profile?.name) || user?.email?.split('@')[0] || 'Vos'
 
   useEffect(() => {
     setLoading(true)
@@ -301,8 +308,10 @@ function PlanCard({ activity, myKeys, roster, myId, onToggle }) {
 
 /* ── One turno: toggle button + roster of who's going ────────────────────── */
 function TurnoRow({ label, selected, people, myId, onClick }) {
-  // Show own name first, then others.
-  const ordered = [...people].sort((a, b) =>
+  // Dedupe by userId (RPC + optimistic could overlap), own entry first.
+  const byId = new Map()
+  for (const p of people) if (!byId.has(p.userId)) byId.set(p.userId, p)
+  const ordered = [...byId.values()].sort((a, b) =>
     (a.userId === myId ? -1 : 0) - (b.userId === myId ? -1 : 0)
   )
 
@@ -321,22 +330,22 @@ function TurnoRow({ label, selected, people, myId, onClick }) {
         <span className={`inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
           selected ? 'bg-black/15 text-black' : 'bg-white/8 text-slate-400'
         }`}>
-          <Users size={9} /> {people.length}
+          <Users size={9} /> {ordered.length}
         </span>
       </button>
 
       {ordered.length > 0 && (
         <div className="flex flex-wrap gap-1 pl-0.5">
-          {ordered.map((p, i) => (
+          {ordered.map((p) => (
             <span
-              key={i}
+              key={p.userId}
               className={`text-[10px] px-2 py-0.5 rounded-full ${
                 p.userId === myId
                   ? 'bg-brand/15 text-brand font-bold'
                   : 'bg-white/5 text-slate-400'
               }`}
             >
-              {p.userId === myId ? 'Vos' : p.name}
+              {p.userId === myId ? 'Vos' : cleanName(p.name)}
             </span>
           ))}
         </div>
