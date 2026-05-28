@@ -98,13 +98,13 @@ export default function Home() {
   })
 
   return (
-    <div className="flex flex-col gap-7 max-w-5xl">
+    <div className="flex flex-col gap-8 max-w-6xl">
 
       {/* Page header */}
       <header>
-        <h1 className="text-2xl sm:text-[28px] font-black text-white tracking-tight">Dashboard</h1>
-        <p className="text-slate-500 text-sm mt-1 capitalize">
-          Hola {profile?.name?.split(' ')[0] ?? user?.email?.split('@')[0] ?? 'corredor'} · {dateLabel}
+        <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">Dashboard</h1>
+        <p className="text-slate-400 text-sm sm:text-base mt-1.5 capitalize">
+          Hola {cleanName(profile?.name)?.split(' ')[0] ?? user?.email?.split('@')[0] ?? 'corredor'} · {dateLabel}
         </p>
         {isSunday && (
           <p className="text-brand text-xs font-semibold mt-2 inline-flex items-center gap-1.5 bg-brand/8 border border-brand/20 px-3 py-1.5 rounded-full">
@@ -147,31 +147,28 @@ export default function Home() {
             </Link>
           }
         >
-          <Card className="p-4">
+          <Card className="p-4 sm:p-5">
             {mySignups.length === 0 ? (
-              <p className="text-slate-500 text-sm flex items-center gap-2">
-                <CalendarCheck size={15} className="text-slate-600" />
+              <p className="text-slate-400 text-sm sm:text-base flex items-center gap-2">
+                <CalendarCheck size={17} className="text-slate-600 shrink-0" />
                 Elegí tus turnos abajo y van a aparecer acá.
               </p>
             ) : (
-              <div className="flex flex-wrap gap-2">
-                {mySignups.map((s, i) => {
-                  const style = BADGE_STYLE[s.type] ?? BADGE_STYLE.rest
-                  return (
-                    <button
-                      key={i}
-                      onClick={() => handleToggle(s.day, s.text)}
-                      title={`${s.label ?? ''} — tocá para sacarte`}
-                      className="group flex items-center gap-2 bg-brand text-black rounded-xl pl-3 pr-2 py-2 text-xs font-bold active:scale-95 transition-all"
-                    >
-                      <span className="uppercase tracking-wide">{DAY_ABBREV[s.day]}</span>
-                      <span className="font-semibold">{s.text}</span>
-                      <span className="w-5 h-5 rounded-md bg-black/15 flex items-center justify-center group-hover:bg-black/30 transition-colors">
-                        <X size={11} strokeWidth={3} />
-                      </span>
-                    </button>
-                  )
-                })}
+              <div className="flex flex-wrap gap-2.5">
+                {mySignups.map((s, i) => (
+                  <button
+                    key={i}
+                    onClick={() => handleToggle(s.day, s.text)}
+                    title={`${s.label ?? ''} — tocá para sacarte`}
+                    className="group flex items-center gap-2 bg-brand text-black rounded-xl pl-3.5 pr-2.5 py-2.5 text-sm font-bold active:scale-95 transition-all"
+                  >
+                    <span className="uppercase tracking-wide">{DAY_ABBREV[s.day]}</span>
+                    <span className="font-semibold">{s.text}</span>
+                    <span className="w-5 h-5 rounded-md bg-black/15 flex items-center justify-center group-hover:bg-black/30 transition-colors">
+                      <X size={12} strokeWidth={3} />
+                    </span>
+                  </button>
+                ))}
               </div>
             )}
           </Card>
@@ -214,7 +211,7 @@ export default function Home() {
             </Link>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {activities.map(a => (
               <PlanCard
                 key={a.id}
@@ -245,38 +242,38 @@ function PlanCard({ activity, myKeys, roster, myId, onToggle }) {
   }
 
   return (
-    <Card className={`p-4 flex flex-col gap-3 ${isRest ? 'opacity-60' : ''}`}>
-      <div className="flex items-start justify-between gap-2">
+    <Card className={`p-5 flex flex-col gap-4 ${isRest ? 'opacity-60' : ''}`}>
+      <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-white font-bold text-sm uppercase tracking-wide truncate">{cardView.dayLabel}</p>
+          <p className="text-white font-bold text-base sm:text-lg uppercase tracking-wide truncate">{cardView.dayLabel}</p>
           {activity.meetpoint?.text && (
-            <p className="text-slate-500 text-[11px] mt-0.5 truncate">📍 {activity.meetpoint.text}</p>
+            <p className="text-slate-500 text-xs mt-1 truncate">📍 {activity.meetpoint.text}</p>
           )}
         </div>
         {activity.badge && (
-          <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-lg shrink-0 ${badge.bg} ${badge.text}`}>
+          <span className={`text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg shrink-0 ${badge.bg} ${badge.text}`}>
             {activity.badge.label}
           </span>
         )}
       </div>
 
       {isRest && activity.restBody?.title && (
-        <p className="text-slate-500 text-xs italic">{activity.restBody.title}</p>
+        <p className="text-slate-400 text-sm italic">{activity.restBody.title}</p>
       )}
 
       {!isRest && (activity.turnos?.length > 0) && (
-        <div className="flex flex-col gap-3">
-          <p className="text-slate-600 text-[10px] uppercase tracking-widest font-semibold flex items-center gap-1.5">
-            <Clock size={10} /> Anotate · tocá tu turno
+        <div className="flex flex-col gap-4">
+          <p className="text-slate-500 text-[11px] uppercase tracking-widest font-semibold flex items-center gap-1.5">
+            <Clock size={12} /> Anotate · tocá tu turno
           </p>
 
           {activity.days.map(day => {
             const dayTurnos = turnosByDay[day] ?? []
             if (dayTurnos.length === 0) return null
             return (
-              <div key={day} className="flex flex-col gap-2">
+              <div key={day} className="flex flex-col gap-2.5">
                 {multiDay && (
-                  <p className="text-slate-500 text-[10px] font-bold uppercase tracking-wider">{DAY_NAME[day]}</p>
+                  <p className="text-slate-400 text-xs font-bold uppercase tracking-wider">{DAY_NAME[day]}</p>
                 )}
                 {dayTurnos.map((t, i) => {
                   const key      = turnoKey(day, t.text)
@@ -298,7 +295,7 @@ function PlanCard({ activity, myKeys, roster, myId, onToggle }) {
           })}
 
           {activity.turnoNote && (
-            <p className="text-slate-600 text-[10px] italic">{activity.turnoNote}</p>
+            <p className="text-slate-500 text-[11px] italic">{activity.turnoNote}</p>
           )}
         </div>
       )}
@@ -316,33 +313,33 @@ function TurnoRow({ label, selected, people, myId, onClick }) {
   )
 
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-2">
       <button
         onClick={onClick}
-        className={`group self-start flex items-center gap-1.5 text-xs font-bold px-2.5 py-1.5 rounded-lg border transition-all active:scale-95 ${
+        className={`group self-start flex items-center gap-2 text-sm font-bold px-3.5 py-2 rounded-xl border transition-all active:scale-95 ${
           selected
             ? 'bg-brand text-black border-brand'
-            : 'bg-white/4 text-slate-300 border-white/10 hover:border-white/20 hover:bg-white/8'
+            : 'bg-white/4 text-slate-200 border-white/10 hover:border-white/20 hover:bg-white/8'
         }`}
       >
-        {selected && <Check size={11} strokeWidth={3} />}
+        {selected && <Check size={13} strokeWidth={3} />}
         {label}
-        <span className={`inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
+        <span className={`inline-flex items-center gap-0.5 text-[11px] font-bold px-1.5 py-0.5 rounded-md ${
           selected ? 'bg-black/15 text-black' : 'bg-white/8 text-slate-400'
         }`}>
-          <Users size={9} /> {ordered.length}
+          <Users size={10} /> {ordered.length}
         </span>
       </button>
 
       {ordered.length > 0 && (
-        <div className="flex flex-wrap gap-1 pl-0.5">
+        <div className="flex flex-wrap gap-1.5 pl-0.5">
           {ordered.map((p) => (
             <span
               key={p.userId}
-              className={`text-[10px] px-2 py-0.5 rounded-full ${
+              className={`text-xs px-2.5 py-1 rounded-full ${
                 p.userId === myId
                   ? 'bg-brand/15 text-brand font-bold'
-                  : 'bg-white/5 text-slate-400'
+                  : 'bg-white/5 text-slate-300'
               }`}
             >
               {p.userId === myId ? 'Vos' : cleanName(p.name)}
