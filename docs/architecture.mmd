@@ -1,0 +1,39 @@
+graph TB
+  subgraph cliente["Cliente"]
+    M["Miembros y Roco<br/>navegador + PWA instalable"]
+  end
+
+  subgraph front["btrt — React 19 + Vite 8 + Tailwind 4"]
+    UI["UI: Dashboard / Planificacion /<br/>Carreras / Estadisticas / Admin"]
+    SW["Service Worker<br/>(Web Push)"]
+  end
+
+  subgraph bot["btrt-bot — Node 22 + Express"]
+    API["endpoints: /notify /webhook<br/>+ node-cron (jobs)"]
+  end
+
+  subgraph scr["scraper — Python"]
+    SC["scraper_cronometraje.py<br/>+ SQLite local"]
+  end
+
+  DB[("Supabase<br/>Postgres + Auth + RLS")]
+  WA["WhatsApp Cloud API<br/>(Meta)"]
+  AI["Anthropic Claude API"]
+  PUSH["Web Push / VAPID"]
+
+  M --> UI
+  UI -->|"queries + auth"| DB
+  UI -->|"POST /notify (JWT admin)"| API
+  API -->|"web-push broadcast"| PUSH
+  PUSH -.->|"notificacion"| SW
+  SW -.->|"muestra notif"| M
+  API -->|"service key"| DB
+  API <-->|"mensajes"| WA
+  WA <--> M
+  API -->|"genera plan / coach / OCR"| AI
+  SC -->|"migrate_to_supabase.py"| DB
+
+  classDef supa fill:#3ECF8E,stroke:#1a8f5f,color:#06281b;
+  classDef ext fill:#FEF3C7,stroke:#d9a300,color:#5b4500;
+  class DB supa;
+  class WA,AI,PUSH ext;

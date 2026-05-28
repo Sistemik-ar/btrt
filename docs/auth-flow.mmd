@@ -1,0 +1,21 @@
+graph LR
+  U["Usuario nuevo"]
+  Roco["Roco (admin)"]
+  L["Login (btrt)"]
+  S[("Supabase Auth")]
+  Mrow["members row<br/>(trigger auto)"]
+  RP["/reset-password"]
+
+  Roco -->|"invita por email"| OTP["signInWithOtp<br/>(magic link)"]
+  OTP -->|"mail con link"| U
+  U -->|"click"| L
+  U -->|"email + contraseña"| L
+  U -->|"Google OAuth"| L
+  L --> S
+  S -->|"on auth user created"| Mrow
+  U -->|"olvide / crear contraseña"| RP
+  RP -->|"updateUser(password)"| S
+  S -->|"password_set = true"| Mrow
+
+  classDef supa fill:#3ECF8E,stroke:#1a8f5f,color:#06281b;
+  class S supa;

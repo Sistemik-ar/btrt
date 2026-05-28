@@ -1,0 +1,16 @@
+sequenceDiagram
+  actor Roco as Roco (admin)
+  participant Ed as PlanEditor
+  participant DB as Supabase
+  participant Bot as btrt-bot
+  actor Mem as Miembro
+
+  Roco->>Ed: arma la semana (tipos, horarios, niveles)
+  Ed->>DB: saveWeek -> weeks.plan (JSONB)
+  Ed->>Bot: POST /notify (Bearer JWT)
+  Bot->>Bot: verifica que el email sea admin
+  Bot-->>Mem: web-push "Planificacion disponible"
+  Note over Mem: aunque la app este cerrada (PWA)
+  Mem->>DB: loadWeek (lee el plan publicado)
+  Mem->>DB: toggle turno -> week_attendance
+  Mem->>DB: week_roster RPC (ve quien mas va)
