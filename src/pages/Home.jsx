@@ -5,6 +5,7 @@ import { loadWeek, subscribeWeek } from '../lib/data'
 import { loadMyAttendance, loadRoster, toggleAttendance, turnoKey, subscribeAttendance } from '../lib/attendance'
 import { Section, Card } from '../components/ui'
 import NotificationsCard from '../components/NotificationsCard'
+import PaymentStatus from '../components/PaymentStatus'
 import { activityToCard, DAY_KEYS, DAY_NAME, DAY_ABBREV } from '../components/RocoWeekPlan'
 import { ArrowRight, Calendar, Check, Clock, Users, Key, X, CalendarCheck } from 'lucide-react'
 
@@ -147,6 +148,9 @@ export default function Home() {
 
       {/* Notificaciones push */}
       <NotificationsCard />
+
+      {/* Estado de cuota del mes */}
+      <PaymentStatus />
 
       {/* Mis inscripciones (quick view) */}
       {!loading && activities.length > 0 && (

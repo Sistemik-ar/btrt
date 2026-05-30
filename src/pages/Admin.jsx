@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 import PlanEditor from '../components/PlanEditor'
+import PaymentsAdmin from '../components/PaymentsAdmin'
 
 import { isAdmin as checkAdmin } from '../lib/auth'
 
@@ -34,6 +35,7 @@ export default function Admin() {
 
   const TABS = [
     { id: 'plan',    label: 'Planificación', icon: PlanIcon },
+    { id: 'pagos',   label: 'Pagos',         icon: PayIcon  },
     { id: 'members', label: 'Miembros',      icon: TeamIcon },
     // Bot WA oculto por ahora — descomentar para reactivar
     // { id: 'bot',     label: 'Bot WA',        icon: BotIcon  },
@@ -77,6 +79,7 @@ export default function Admin() {
 
       {/* Content */}
       {activeTab === 'plan'    && <PlanEditor />}
+      {activeTab === 'pagos'   && <PaymentsAdmin />}
       {activeTab === 'members' && <MembersTab />}
       {activeTab === 'bot'     && <BotTab />}
     </div>
@@ -873,6 +876,9 @@ function BotTab() {
 }
 
 /* ── Icons ── */
+function PayIcon({ size = 16 }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+}
 function PlanIcon({ size = 16 }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h4"/></svg>
 }
