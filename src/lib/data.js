@@ -79,7 +79,7 @@ export async function saveWeek(weekId, plan) {
 export function subscribeWeek(weekId, onChange) {
   if (USE_MOCK) return () => {}
   const ch = supabase
-    .channel(`rt-week-${weekId}`)
+    .channel(`rt-week-${weekId}-${Math.random().toString(36).slice(2)}`)
     .on(
       'postgres_changes',
       { event: '*', schema: 'public', table: 'weeks', filter: `id=eq.${weekId}` },

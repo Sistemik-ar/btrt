@@ -95,7 +95,7 @@ export async function loadRoster(weekId) {
 export function subscribeAttendance(weekId, onChange) {
   if (USE_MOCK) return () => {}
   const ch = supabase
-    .channel(`rt-att-${weekId}`)
+    .channel(`rt-att-${weekId}-${Math.random().toString(36).slice(2)}`)
     .on(
       'postgres_changes',
       { event: '*', schema: 'public', table: 'week_attendance', filter: `week_id=eq.${weekId}` },

@@ -57,8 +57,11 @@ export async function markAllRead(list, userId) {
 /** Realtime: nuevas notificaciones (propias o broadcast). Devuelve unsubscribe. */
 export function subscribeNotifications(userId, onInsert) {
   if (USE_MOCK) return () => {}
+  // Nombre único por suscripción: varias campanas (sidebar + topbar) no deben
+  // compartir canal, o el 2º .on() corre sobre un canal ya suscripto y rompe.
+  const name = `rt-notifs-${Math.random().toString(36).slice(2)}`
   const ch = supabase
-    .channel('rt-notifs')
+    .channel(name)
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, payload => {
       const n = payload.new
       if (n.user_id === null || n.user_id === userId) onInsert(n)
