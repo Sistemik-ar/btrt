@@ -35,7 +35,8 @@ export default function Admin() {
   const TABS = [
     { id: 'plan',    label: 'Planificación', icon: PlanIcon },
     { id: 'members', label: 'Miembros',      icon: TeamIcon },
-    { id: 'bot',     label: 'Bot WA',        icon: BotIcon  },
+    // Bot WA oculto por ahora — descomentar para reactivar
+    // { id: 'bot',     label: 'Bot WA',        icon: BotIcon  },
   ]
 
   return (

@@ -35,7 +35,8 @@ export default function Layout({ children }) {
           shortLabel: 'Carreras',
           children: [
             { to: '/buscar',                Icon: SearchIcon, label: 'Buscar Participante', shortLabel: 'Buscar' },
-            { to: '/estadisticas-carreras', Icon: BarChart3,  label: 'Estadísticas',        shortLabel: 'Stats'  },
+            // Estadísticas Carreras oculto por ahora — descomentar para reactivar
+            // { to: '/estadisticas-carreras', Icon: BarChart3,  label: 'Estadísticas',        shortLabel: 'Stats'  },
           ],
         },
       ],

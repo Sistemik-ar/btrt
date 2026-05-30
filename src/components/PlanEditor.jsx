@@ -339,6 +339,7 @@ export default function PlanEditor() {
               key={currentActivity.id}
               activity={currentActivity}
               activeDay={activeDay}
+              setActiveDay={setActiveDay}
               plan={plan}
               onPatch={patch => updateActivity(currentActivity.id, patch)}
               onShareDay={day => shareDay(day, currentActivity.id)}
@@ -437,7 +438,7 @@ function DayTabs({ plan, activeDay, setActiveDay }) {
 
 /* ── Activity editor ─────────────────────────────────────────────────────── */
 
-function ActivityEditor({ activity, activeDay, plan, onPatch, onShareDay, onUnshareDay }) {
+function ActivityEditor({ activity, activeDay, setActiveDay, plan, onPatch, onShareDay, onUnshareDay }) {
   const isRest = activity.rest || activity.badge?.type === 'rest'
   const dayLabel = activity.days.length > 1
     ? activity.days.map(d => DAY_NAME[d]).join(' / ')
@@ -483,7 +484,7 @@ function ActivityEditor({ activity, activeDay, plan, onPatch, onShareDay, onUnsh
             </Field>
           )}
 
-          <Field label="Se repite los días" hint="Tocá un día para que comparta esta misma sesión. Los horarios se cargan por día.">
+          <Field label="Se repite los días" hint="Tocá un día para que comparta esta sesión. El día activo se marca con un punto.">
             <div className="grid grid-cols-7 gap-1">
               {DAY_KEYS.map(d => {
                 const sharesHere   = activity.days.includes(d)
@@ -494,22 +495,36 @@ function ActivityEditor({ activity, activeDay, plan, onPatch, onShareDay, onUnsh
                   <button
                     key={d}
                     onClick={() => {
-                      if (sharesHere) { if (!isSoleDay) onUnshareDay(d) }
-                      else onShareDay(d)
+                      if (sharesHere) {
+                        if (isSoleDay) return // único día del grupo: no se puede sacar
+                        // Si era el día actual, saltamos al primer día restante del grupo
+                        // para que la UI no se "quede" en el solo recién creado.
+                        if (isCurrentDay) {
+                          const next = activity.days.find(x => x !== d)
+                          if (next) setActiveDay(next)
+                        }
+                        onUnshareDay(d)
+                      } else {
+                        onShareDay(d)
+                      }
                     }}
                     disabled={isSoleDay}
                     title={
-                      isSoleDay ? 'Día actual — cambiá el tipo a Descanso para feriado'
-                        : sharesHere ? 'Sacar de esta sesión (queda en su propio día)'
+                      isSoleDay ? 'Único día de esta sesión'
+                        : isCurrentDay && sharesHere ? 'Sacar este día del grupo (te lleva al día restante)'
+                        : sharesHere ? 'Sacar de esta sesión'
                         : `Compartir con ${DAY_NAME[d]}${other ? ` (hoy: ${TYPE_LABELS[other.badge?.type]})` : ''}`
                     }
-                    className={`h-9 rounded-md text-[11px] font-bold uppercase transition-colors ${
+                    className={`relative h-9 rounded-md text-[11px] font-bold uppercase transition-colors ${
                       sharesHere
                         ? 'bg-brand/15 text-brand border border-brand/40'
                         : 'bg-white/[0.03] text-slate-500 border border-white/[0.06] hover:text-white hover:bg-white/[0.08]'
-                    } ${isCurrentDay && sharesHere ? 'ring-1 ring-brand/30' : ''}`}
+                    } ${isCurrentDay ? 'ring-1 ring-brand/50' : ''}`}
                   >
                     {DAY_ABBREV[d]}
+                    {isCurrentDay && (
+                      <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-brand" />
+                    )}
                   </button>
                 )
               })}
