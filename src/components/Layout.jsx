@@ -29,7 +29,7 @@ export default function Layout({ children }) {
     {
       label: 'General',
       items: [
-        { to: '/',                      Icon: LayoutDashboard, label: 'Dashboard'     },
+        { to: '/inicio',                Icon: LayoutDashboard, label: 'Dashboard'     },
         { to: '/planificacion-semanal', Icon: Calendar,        label: 'Planificación' },
         {
           Icon: Trophy,
@@ -170,7 +170,7 @@ export default function Layout({ children }) {
           <NavLink
             key={to}
             to={to}
-            end={to === '/'}
+            end={to === '/inicio'}
             className={({ isActive }) =>
               `flex-1 flex flex-col items-center gap-1.5 py-3 text-[10px] font-semibold tracking-wide transition-colors
                ${isActive ? 'text-brand' : 'text-slate-600'}`
@@ -195,7 +195,7 @@ function NavLeaf({ item, collapsed, nested = false }) {
   return (
     <NavLink
       to={to}
-      end={to === '/'}
+      end={to === '/inicio'}
       title={collapsed ? label : undefined}
       className={({ isActive }) =>
         `relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all

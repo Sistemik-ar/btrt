@@ -3,19 +3,40 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import { AuthProvider, useAuth } from './lib/AuthContext'
 import Layout from './components/Layout'
 import Login from './pages/Login'
+import Landing from './pages/Landing'
 import Home from './pages/Home'
 import Admin from './pages/Admin'
 import { isAdmin as checkAdmin } from './lib/auth'
+import { isStaff } from './lib/roles'
 
 const Search        = lazy(() => import('./pages/Search'))
 const Schedule      = lazy(() => import('./pages/Schedule'))
 const Stats         = lazy(() => import('./pages/Stats'))
 const ResetPassword = lazy(() => import('./pages/ResetPassword'))
 
+/** Rutas autenticadas (con sidebar). Redirige a /login si no hay sesión. */
+function AppShell() {
+  const { user, profile } = useAuth()
+  if (!user) return <Navigate to="/login" replace />
+
+  const isAdminUser = isStaff(profile) || checkAdmin(user.email)
+  return (
+    <Layout>
+      <Routes>
+        <Route path="/inicio" element={<Home />} />
+        <Route path="/admin" element={isAdminUser ? <Admin /> : <Navigate to="/inicio" replace />} />
+        <Route path="/buscar" element={<Suspense fallback={<Loader />}><Search /></Suspense>} />
+        <Route path="/planificacion-semanal" element={<Suspense fallback={<Loader />}><Schedule /></Suspense>} />
+        <Route path="/estadisticas-carreras" element={<Suspense fallback={<Loader />}><Stats /></Suspense>} />
+        <Route path="*" element={<Navigate to="/inicio" replace />} />
+      </Routes>
+    </Layout>
+  )
+}
+
 function AppRoutes() {
   const { user } = useAuth()
   const location = useLocation()
-  const isResetRoute = location.pathname === '/reset-password'
 
   if (user === undefined) {
     return (
@@ -25,42 +46,16 @@ function AppRoutes() {
     )
   }
 
-  // /reset-password renders standalone (no sidebar) so it works for both
-  // recovery-link landings and in-app password setup.
-  if (isResetRoute) {
-    return (
-      <Suspense fallback={<Loader />}>
-        <ResetPassword />
-      </Suspense>
-    )
-  }
-
-  if (!user) return <Login />
-
-  const isAdmin = checkAdmin(user.email)
   return (
-    <Layout>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/admin" element={isAdmin ? <Admin /> : <Navigate to="/" replace />} />
-        <Route path="/buscar" element={
-          <Suspense fallback={<Loader />}>
-            <Search />
-          </Suspense>
-        } />
-        <Route path="/planificacion-semanal" element={
-          <Suspense fallback={<Loader />}>
-            <Schedule />
-          </Suspense>
-        } />
-        <Route path="/estadisticas-carreras" element={
-          <Suspense fallback={<Loader />}>
-            <Stats />
-          </Suspense>
-        } />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Layout>
+    <Routes>
+      {/* Públicas */}
+      <Route path="/" element={<Landing />} />
+      <Route path="/login" element={user ? <Navigate to="/inicio" replace /> : <Login />} />
+      <Route path="/reset-password" element={<Suspense fallback={<Loader />}><ResetPassword /></Suspense>} />
+
+      {/* App (autenticada) — cualquier otra ruta entra al shell */}
+      <Route path="/*" element={<AppShell key={location.key} />} />
+    </Routes>
   )
 }
 
