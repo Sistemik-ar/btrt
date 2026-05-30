@@ -149,11 +149,24 @@ export default function Landing() {
 
       {/* ── Footer ── */}
       <footer className="bw-footer">
-        <div className="bw-footer-logo">BANDURRIAS</div>
+        <a href={IG_URL} target="_blank" rel="noreferrer" className="bw-footer-join">¡Sumate!</a>
         <div className="bw-footer-center">Bandurrias Trail Running · Bariloche · Patagonia Argentina</div>
-        <a href={IG_URL} target="_blank" rel="noreferrer" className="bw-footer-ig">@bandurriastrailrunning</a>
+        <a href={IG_URL} target="_blank" rel="noreferrer" className="bw-footer-ig">
+          <IgIcon /> @bandurriastrailrunning
+        </a>
       </footer>
     </div>
+  )
+}
+
+function IgIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+      <rect x="2" y="2" width="20" height="20" rx="5" />
+      <circle cx="12" cy="12" r="4" />
+      <line x1="17.5" y1="6.5" x2="17.5" y2="6.5" />
+    </svg>
   )
 }
 
@@ -259,8 +272,9 @@ const CSS = `
 /* Footer */
 .bw-footer { background: var(--dark-2); border-top: 1px solid var(--border); padding: 36px 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
 @media (min-width: 768px) { .bw-footer { padding: 40px 64px; } }
-.bw-footer-logo { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 0.1em; color: var(--muted); }
+.bw-footer-join { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 0.06em; color: var(--acid); transition: opacity 0.18s; }
+.bw-footer-join:hover { opacity: 0.8; }
 .bw-footer-center { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.12em; color: var(--muted); text-align: center; line-height: 1.8; }
-.bw-footer-ig { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); transition: color 0.18s; }
+.bw-footer-ig { display: inline-flex; align-items: center; gap: 7px; font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); transition: color 0.18s; }
 .bw-footer-ig:hover { color: var(--acid); }
 `
