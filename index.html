@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <!-- ── SEO básico ── -->
-    <title>Bandurrias Trail Running · Entrenamiento de trail running en Bariloche</title>
-    <meta name="description" content="Equipo y comunidad de trail running en Bariloche, Patagonia. Entrenamientos grupales, planificación profesional, coaching a distancia y preparación para carreras y ultra trail." />
-    <meta name="keywords" content="trail running Bariloche, running Bariloche, entrenamiento trail running, ultra trail Patagonia, coaching trail running a distancia, club de running Bariloche, carreras de montaña, Bandurrias Trail Running" />
+    <title>Bandurrias Trail Running · Entrenamiento en Bariloche y coaching a distancia</title>
+    <meta name="description" content="Equipo de trail running en Bariloche, Patagonia, y coaching online a distancia para corredores de Argentina, Latinoamérica y España. Planificación profesional, entrenamientos grupales y preparación para carreras y ultra trail." />
+    <meta name="keywords" content="trail running Bariloche, running Bariloche, entrenamiento trail running, ultra trail Patagonia, club de running Bariloche, carreras de montaña, coaching trail running a distancia, entrenador de trail running online, plan de entrenamiento ultra trail online, coaching trail running España, entrenamiento running a distancia Latinoamérica, preparador físico trail online, entrenador running online Argentina, Bandurrias Trail Running" />
     <meta name="author" content="Bandurrias Trail Running Team" />
     <meta name="robots" content="index, follow" />
     <link rel="canonical" href="https://bandurriastrailrunning.com.ar/" />
@@ -22,11 +22,14 @@
     <!-- ── Open Graph (Facebook / WhatsApp / IG) ── -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Bandurrias Trail Running" />
-    <meta property="og:title" content="Bandurrias Trail Running · Trail running en Bariloche" />
-    <meta property="og:description" content="Comunidad de trail running en Bariloche. Entrenamientos grupales, planificación profesional y coaching a distancia de ultra trail en la Patagonia." />
+    <meta property="og:title" content="Bandurrias Trail Running · Bariloche + coaching a distancia" />
+    <meta property="og:description" content="Trail running en Bariloche y coaching online de ultra trail para corredores de Argentina, Latinoamérica y España. Planificación profesional y preparación de carreras." />
     <meta property="og:url" content="https://bandurriastrailrunning.com.ar/" />
     <meta property="og:image" content="https://bandurriastrailrunning.com.ar/og-image.jpg" />
     <meta property="og:locale" content="es_AR" />
+    <meta property="og:locale:alternate" content="es_ES" />
+    <meta property="og:locale:alternate" content="es_CL" />
+    <meta property="og:locale:alternate" content="es_MX" />
 
     <!-- ── Twitter Card ── -->
     <meta name="twitter:card" content="summary_large_image" />
@@ -38,22 +41,44 @@
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "SportsActivityLocation",
-      "name": "Bandurrias Trail Running",
-      "description": "Equipo y comunidad de trail running en Bariloche. Entrenamientos grupales, planificación profesional y coaching a distancia de ultra trail en la Patagonia.",
-      "url": "https://bandurriastrailrunning.com.ar/",
-      "sport": "Trail running",
-      "image": "https://bandurriastrailrunning.com.ar/og-image.jpg",
-      "logo": "https://bandurriastrailrunning.com.ar/logo.png",
-      "areaServed": "San Carlos de Bariloche, Patagonia, Argentina",
-      "address": {
-        "@type": "PostalAddress",
-        "addressLocality": "San Carlos de Bariloche",
-        "addressRegion": "Río Negro",
-        "addressCountry": "AR"
-      },
-      "geo": { "@type": "GeoCoordinates", "latitude": -41.1335, "longitude": -71.3103 },
-      "sameAs": ["https://www.instagram.com/bandurriastrailrunning/"]
+      "@graph": [
+        {
+          "@type": "SportsActivityLocation",
+          "@id": "https://bandurriastrailrunning.com.ar/#org",
+          "name": "Bandurrias Trail Running",
+          "description": "Equipo y comunidad de trail running en Bariloche. Entrenamientos grupales y planificación profesional en la Patagonia.",
+          "url": "https://bandurriastrailrunning.com.ar/",
+          "sport": "Trail running",
+          "image": "https://bandurriastrailrunning.com.ar/og-image.jpg",
+          "logo": "https://bandurriastrailrunning.com.ar/logo.png",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "San Carlos de Bariloche",
+            "addressRegion": "Río Negro",
+            "addressCountry": "AR"
+          },
+          "geo": { "@type": "GeoCoordinates", "latitude": -41.1335, "longitude": -71.3103 },
+          "sameAs": ["https://www.instagram.com/bandurriastrailrunning/"]
+        },
+        {
+          "@type": "Service",
+          "name": "Coaching de trail running a distancia",
+          "serviceType": "Planificación y coaching online de trail running y ultra trail",
+          "provider": { "@id": "https://bandurriastrailrunning.com.ar/#org" },
+          "description": "Planificación personalizada y coaching a distancia de trail running y ultra trail para corredores de cualquier lugar. Seguimiento remoto vía la app.",
+          "areaServed": [
+            { "@type": "Country", "name": "Argentina" },
+            { "@type": "Country", "name": "Chile" },
+            { "@type": "Country", "name": "Uruguay" },
+            { "@type": "Country", "name": "España" },
+            { "@type": "Place", "name": "Latinoamérica" }
+          ],
+          "availableChannel": {
+            "@type": "ServiceChannel",
+            "serviceUrl": "https://bandurriastrailrunning.com.ar/login"
+          }
+        }
+      ]
     }
     </script>
 
