@@ -216,7 +216,7 @@ const CSS = `
 .bw-hero-actions { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
 
 /* Buttons */
-.bw-btn-primary { display: inline-flex; align-items: center; gap: 8px; background: var(--acid); color: var(--dark); font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; padding: 15px 30px; border-radius: 4px; box-shadow: 0 8px 28px rgba(0,0,0,0.45), 0 0 0 1px rgba(200,255,0,0.5); transition: transform 0.18s, box-shadow 0.18s; }
+.bw-btn-primary { display: inline-flex; align-items: center; gap: 8px; background: var(--acid); color: #0a0a08 !important; font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; padding: 15px 30px; border-radius: 4px; box-shadow: 0 8px 28px rgba(0,0,0,0.45), 0 0 0 1px rgba(200,255,0,0.5); transition: transform 0.18s, box-shadow 0.18s; }
 .bw-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 36px rgba(200,255,0,0.3), 0 0 0 1px var(--acid); }
 .bw-btn-ghost { display: inline-flex; align-items: center; gap: 8px; color: var(--white); font-size: 13px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; text-shadow: 0 2px 8px rgba(0,0,0,0.7); }
 .bw-btn-ghost .bw-arrow { transition: transform 0.18s; }
