@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /$
+Allow: /login
+Disallow: /inicio
+Disallow: /admin
+Disallow: /planificacion-semanal
+Disallow: /buscar
+Disallow: /estadisticas-carreras
+Disallow: /reset-password
+
+Sitemap: https://bandurriastrailrunning.com.ar/sitemap.xml
