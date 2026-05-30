@@ -356,9 +356,10 @@ export default function PlanEditor() {
 
 function WeekPicker({ weekId, setWeekId }) {
   const presets = [
-    { key: 'this',  label: 'Esta semana',    value: getThisMondayId() },
-    { key: 'next',  label: 'Próxima semana', value: getNextMondayId() },
-    { key: 'next2', label: 'En 2 semanas',   value: shiftWeek(getThisMondayId(), 2) },
+    { key: 'this',  label: 'Vigente',         value: getThisMondayId() },
+    { key: 'next',  label: 'Próxima',         value: getNextMondayId() },
+    { key: 'next2', label: 'En 2 semanas',    value: shiftWeek(getThisMondayId(), 2) },
+    { key: 'next3', label: 'En 3 semanas',    value: shiftWeek(getThisMondayId(), 3) },
   ]
   const active = presets.find(p => p.value === weekId)?.key
 

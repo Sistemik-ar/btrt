@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { loadWeek, listMockWeekIds, subscribeWeek } from '../lib/data'
-import RocoWeekPlan from '../components/RocoWeekPlan'
+import PremiumWeekPlan from '../components/PremiumWeekPlan'
 import { Card } from '../components/ui'
 import { ChevronLeft, ChevronRight, Calendar, Printer } from 'lucide-react'
 
@@ -119,7 +119,7 @@ export default function Schedule() {
           <div className="w-6 h-6 border-2 border-brand/20 border-t-brand rounded-full animate-spin" />
         </div>
       ) : week ? (
-        <RocoWeekPlan week={week} />
+        <PremiumWeekPlan week={week} />
       ) : (
         <Card className="flex flex-col items-center justify-center py-16 text-center gap-4">
           <div className="w-14 h-14 rounded-2xl bg-brand/8 border border-brand/10 flex items-center justify-center">
