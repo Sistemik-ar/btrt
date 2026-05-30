@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { isAdmin as checkAdminEmail } from '../lib/auth'
 import { isStaff } from '../lib/roles'
+import NotificationBell from './NotificationBell'
 
 export default function Layout({ children }) {
   const { user, profile, signOut } = useAuth()
@@ -74,13 +75,16 @@ export default function Layout({ children }) {
             </div>
             {!collapsed && <p className="text-white font-bold text-sm tracking-tight">BANDURRIAS</p>}
           </div>
-          <button
-            onClick={() => setCollapsed(c => !c)}
-            title={collapsed ? 'Expandir' : 'Colapsar'}
-            className="shrink-0 w-7 h-7 rounded-lg hover:bg-white/8 flex items-center justify-center text-slate-500 hover:text-white transition-all"
-          >
-            {collapsed ? <ChevronRight size={14} /> : <Menu size={14} />}
-          </button>
+          <div className="flex items-center gap-1 shrink-0">
+            {!collapsed && <NotificationBell compact />}
+            <button
+              onClick={() => setCollapsed(c => !c)}
+              title={collapsed ? 'Expandir' : 'Colapsar'}
+              className="w-7 h-7 rounded-lg hover:bg-white/8 flex items-center justify-center text-slate-500 hover:text-white transition-all"
+            >
+              {collapsed ? <ChevronRight size={14} /> : <Menu size={14} />}
+            </button>
+          </div>
         </div>
 
         {/* Nav groups */}
@@ -153,9 +157,12 @@ export default function Layout({ children }) {
             </div>
             <p className="text-white font-bold text-sm tracking-tight">BANDURRIAS</p>
           </div>
-          <button onClick={handleSignOut} className="text-slate-500 hover:text-white transition-colors">
-            <LogOut size={16} />
-          </button>
+          <div className="flex items-center gap-4">
+            <NotificationBell />
+            <button onClick={handleSignOut} className="text-slate-500 hover:text-white transition-colors">
+              <LogOut size={16} />
+            </button>
+          </div>
         </header>
 
         {/* Page */}
