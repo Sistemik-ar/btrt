@@ -70,7 +70,7 @@ export default function Schedule() {
   }, [weekId, bumped])
 
   return (
-    <div className="flex flex-col gap-5 max-w-[1140px] mx-auto">
+    <div className="flex flex-col gap-5 w-full max-w-[1280px] mx-auto">
 
       {/* Slim week nav (above Roco header) */}
       <div className="flex items-center gap-3 no-print">

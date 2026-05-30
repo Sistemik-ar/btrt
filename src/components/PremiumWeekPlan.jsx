@@ -81,13 +81,14 @@ export default function PremiumWeekPlan({ week }) {
 
 function ActivityCard({ activity, weekDates }) {
   const isRest = activity.rest || activity.badge?.type === 'rest'
+  const isFeature = activity.badge?.type === 'fondazo'  // el fondo destaca: fila completa
   const title  = deriveTitle(activity)
   const meta   = deriveMetaChips(activity)
   const niveles = (activity.niveles ?? []).filter(n => n.text)
   const destinos = activity.extra?.destinations ?? {}
 
   return (
-    <article className={`pwp-card ${isRest ? 'pwp-rest' : ''}`}>
+    <article className={`pwp-card ${isRest ? 'pwp-rest' : ''} ${isFeature ? 'pwp-feature' : ''}`}>
       {/* Header */}
       <header className="pwp-header">
         <div className="pwp-team">Bandurrias Trail Running Team · Bariloche</div>
@@ -267,10 +268,17 @@ const PWP_CSS = `
   --pwp-blue:   #3399ff;
 
   font-family: 'Barlow', sans-serif;
-  display: flex; flex-direction: column; gap: 20px;
-  width: 100%; max-width: 560px; margin: 0 auto;
+  width: 100%; max-width: 1240px; margin: 0 auto;
   color: var(--pwp-white);
+
+  /* Mobile: 1 columna. Desktop: masonry de 2-3 columnas que aprovecha el ancho. */
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+  align-items: start;
 }
+@media (min-width: 880px)  { .pwp-root { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1500px) { .pwp-root { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .pwp-root * { box-sizing: border-box; }
 
 .pwp-card {
@@ -278,6 +286,12 @@ const PWP_CSS = `
   border-top: 5px solid var(--pwp-lime);
   border-radius: 4px;
   overflow: hidden;
+}
+/* El fondo (sábado) es el destacado → ocupa toda la fila en multi-columna. */
+.pwp-card.pwp-feature { grid-column: 1 / -1; }
+@media (min-width: 880px) {
+  .pwp-card.pwp-feature .pwp-body { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 28px; align-items: start; }
+  .pwp-card.pwp-feature .pwp-body > div:first-child { grid-column: 1 / -1; }
 }
 .pwp-card.pwp-rest { border-top-color: var(--pwp-gray3); opacity: 0.7; }
 
