@@ -2,10 +2,14 @@ import { useEffect, useRef, useState } from 'react'
 import { loadWeek, saveWeek, deleteWeek } from '../lib/data'
 import { planToCsv, csvToActivities, downloadText } from '../lib/planCsv'
 import { broadcastNotification } from '../lib/push'
-import RocoWeekPlan, { DAY_KEYS, DAY_NAME, DAY_ABBREV } from './RocoWeekPlan'
+import { useAutoSave } from '../hooks/useAutoSave'
+import PremiumWeekPlan from './PremiumWeekPlan'
+import ReusableMessagesPanel from './ReusableMessagesPanel'
+import { DAY_KEYS, DAY_NAME, DAY_ABBREV } from './RocoWeekPlan'
 import {
-  Plus, Trash2, Eye, Save, AlertTriangle, Calendar,
+  Plus, Trash2, Eye, AlertTriangle, Calendar,
   FileDown, FileUp, Printer, ChevronLeft, ChevronRight, MapPin, Clock,
+  Bell, Copy, RotateCcw, CloudCheck, CloudOff, Loader2,
 } from 'lucide-react'
 
 /* ── Helpers ─────────────────────────────────────────────────────────────── */
@@ -190,15 +194,23 @@ function patchActivity(plan, activityId, patch) {
 export default function PlanEditor() {
   const [weekId, setWeekId]       = useState(getNextMondayId())
   const [plan, setPlan]           = useState(null)
-  const [saving, setSaving]       = useState(false)
-  const [savedInfo, setSavedInfo] = useState(null)
+  const [notifying, setNotifying] = useState(false)
+  const [notifInfo, setNotifInfo] = useState(null)
   const [preview, setPreview]     = useState(false)
   const [activeDay, setActiveDay] = useState('lun')
   const [error, setError]         = useState(null)
+  const [showMsgs, setShowMsgs]   = useState(false)   // panel mobile
   const fileRef = useRef(null)
 
+  // Auto-save: persiste borrador (no publicado) con debounce.
+  const auto = useAutoSave(plan, async (p) => {
+    if (!p) return
+    await saveWeek(weekId, { ...p, dates: formatWeekRange(weekId), weekNumber: weekNumberFromId(weekId) })
+  }, { delay: 1000, enabled: !!plan })
+
   useEffect(() => {
-    setSavedInfo(null); setError(null)
+    setNotifInfo(null); setError(null)
+    auto.skipNext()
     ;(async () => {
       try {
         const existing = await loadWeek(weekId)
@@ -208,11 +220,12 @@ export default function PlanEditor() {
         setPlan(defaultPlan(weekId))
       }
     })()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [weekId])
 
-  const updateActivity   = (id, patch) => setPlan(p => patchActivity(p, id, patch))
-  const shareDay         = (day, id)   => setPlan(p => attachDay(p, day, id))
-  const unshareDay       = (day)       => {
+  const updateActivity = (id, patch) => setPlan(p => patchActivity(p, id, patch))
+  const shareDay       = (day, id)   => setPlan(p => attachDay(p, day, id))
+  const unshareDay     = (day)       => {
     if (day === activeDay) {
       const sibling = getActivityForDay(plan, day)?.days.find(d => d !== day)
       if (sibling) setActiveDay(sibling)
@@ -220,34 +233,60 @@ export default function PlanEditor() {
     setPlan(p => detachDay(p, day))
   }
 
-  async function publish() {
-    setSaving(true); setError(null)
+  // Inserta un mensaje preguardado en la Observación de la actividad activa.
+  function insertMessage(text) {
+    const act = getActivityForDay(plan, activeDay)
+    if (!act) return
+    const prev = act.note?.text ?? ''
+    const next = prev ? `${prev}\n${text}` : text
+    updateActivity(act.id, { note: { strong: act.note?.strong ?? 'Importante:', text: next } })
+    setShowMsgs(false)
+  }
+
+  async function notifyUsers() {
+    setNotifying(true); setError(null)
     try {
-      const updated = { ...plan, published: true, dates: formatWeekRange(weekId), weekNumber: weekNumberFromId(weekId) }
-      const res = await saveWeek(weekId, updated)
+      await auto.flush()
+      const updated = { ...plan, published: true }
+      await saveWeek(weekId, { ...updated, dates: formatWeekRange(weekId), weekNumber: weekNumberFromId(weekId) })
       setPlan(updated)
-      setSavedInfo({ at: new Date(), persisted: res.persisted })
-      if (confirm('Plan publicado.\n\n¿Mandar notificación push a los miembros?')) {
-        const r = await broadcastNotification({
-          title: 'Planificación disponible 🏔',
-          body:  `Ya está la semana ${formatWeekRange(weekId)}. Anotate a tus turnos.`,
-          url:   '/planificacion-semanal',
-          tag:   `plan-${weekId}`,
-        })
-        if (r?.sent != null) setSavedInfo({ at: new Date(), persisted: res.persisted, pushed: r.sent })
-      }
+      const r = await broadcastNotification({
+        title: 'Planificación disponible 🏔',
+        body:  `Ya está la semana ${formatWeekRange(weekId)}. Anotate a tus turnos.`,
+        url:   '/planificacion-semanal',
+        tag:   `plan-${weekId}`,
+      })
+      setNotifInfo({ at: new Date(), pushed: r?.sent ?? null, skipped: r?.skipped })
     } catch (e) {
-      setError(e.message ?? 'Error guardando')
+      setError(e.message ?? 'Error al notificar')
     } finally {
-      setSaving(false)
+      setNotifying(false)
     }
   }
 
-  async function clear() {
-    if (!confirm(`¿Borrar plan de la semana ${formatWeekRange(weekId)}?`)) return
+  function duplicatePrevWeek() {
+    if (!confirm('Traer la planificación de la semana anterior a esta semana? Reemplaza lo actual.')) return
+    ;(async () => {
+      const prev = await loadWeek(shiftWeek(weekId, -1))
+      if (prev?.activities) {
+        setPlan({ ...prev, id: weekId, published: false })
+      } else {
+        setError('La semana anterior no tiene planificación cargada.')
+      }
+    })()
+  }
+
+  function resetWeek() {
+    if (!confirm('Resetear esta semana a la plantilla por defecto?')) return
+    setPlan(defaultPlan(weekId))
+  }
+
+  async function clearWeek() {
+    if (!confirm(`Borrar la planificación de ${formatWeekRange(weekId)}?`)) return
     try {
       await deleteWeek(weekId)
-      setPlan(defaultPlan(weekId)); setSavedInfo(null)
+      auto.skipNext()
+      setPlan(defaultPlan(weekId)); setNotifInfo(null)
     } catch (e) { setError(e.message ?? 'Error borrando') }
   }
 
@@ -259,7 +298,7 @@ export default function PlanEditor() {
     try {
       const activities = csvToActivities(await file.text())
       if (!activities.length) { setError('CSV vacío o con formato inválido.'); return }
-      setPlan(p => ({ ...p, activities })); setError(null); setSavedInfo(null)
+      setPlan(p => ({ ...p, activities })); setError(null)
     } catch (err) { setError('No se pudo leer el CSV: ' + (err.message ?? '')) }
   }
   function exportPdf() { setPreview(true); setTimeout(() => window.print(), 350) }
@@ -275,25 +314,25 @@ export default function PlanEditor() {
   const currentActivity = getActivityForDay(plan, activeDay)
 
   return (
-    <div className="max-w-5xl mx-auto flex flex-col gap-6">
+    <div className="flex flex-col gap-5">
       <input ref={fileRef} type="file" accept=".csv,text/csv" onChange={importCsv} className="hidden" />
 
-      {/* ── Action bar ── */}
-      <div className="no-print flex flex-col sm:flex-row sm:items-center gap-3">
+      {/* ── Header ── */}
+      <div className="no-print flex flex-col lg:flex-row lg:items-center gap-3">
         <div className="min-w-0">
-          <h2 className="text-lg font-bold text-white leading-tight">Planificación semanal</h2>
-          <p className="text-xs text-slate-500 mt-0.5 capitalize">{formatWeekRange(weekId)}</p>
+          <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">Planificación semanal</h1>
+          <p className="text-xs text-slate-500 mt-1 capitalize">
+            {plan.published ? 'Publicada' : 'Borrador'} · {formatWeekRange(weekId)}
+          </p>
         </div>
 
-        <div className="sm:ml-auto flex items-center gap-2">
-          {/* secondary actions */}
+        <div className="lg:ml-auto flex items-center gap-2 flex-wrap">
+          <SaveStatus status={auto.status} savedAt={auto.savedAt} />
           <div className="flex items-center gap-1.5">
-            <IconButton icon={FileUp}  label="Importar CSV" onClick={() => fileRef.current?.click()} />
+            <IconButton icon={FileUp}   label="Importar CSV" onClick={() => fileRef.current?.click()} />
             <IconButton icon={FileDown} label="Exportar CSV" onClick={exportCsv} />
             <IconButton icon={Printer}  label="Exportar PDF" onClick={exportPdf} />
-            <IconButton icon={Trash2}   label="Borrar plan"  onClick={clear} danger />
           </div>
-          <div className="w-px h-6 bg-white/10 mx-0.5" />
           <button
             onClick={() => setPreview(p => !p)}
             className="h-9 px-3 inline-flex items-center gap-1.5 rounded-lg border border-white/[0.08] bg-white/[0.03] text-slate-300 text-xs font-bold hover:bg-white/[0.08] hover:text-white transition-colors"
@@ -301,53 +340,172 @@ export default function PlanEditor() {
             <Eye size={14} /> {preview ? 'Editor' : 'Vista previa'}
           </button>
           <button
-            onClick={publish}
-            disabled={saving}
+            onClick={notifyUsers}
+            disabled={notifying}
             className="h-9 px-4 inline-flex items-center gap-1.5 rounded-lg bg-brand text-black text-xs font-bold hover:bg-[#d4ff33] active:scale-95 transition-all disabled:opacity-50"
           >
-            <Save size={14} /> {saving ? 'Guardando…' : 'Publicar'}
+            <Bell size={14} /> {notifying ? 'Notificando…' : 'Notificar a usuarios'}
           </button>
         </div>
       </div>
 
       {/* ── Banners ── */}
       {error && (
-        <div className="bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-2.5 text-sm text-red-300 font-medium">
-          ⚠ {error}
-        </div>
+        <div className="bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-2.5 text-sm text-red-300 font-medium">⚠ {error}</div>
       )}
-      {savedInfo && (
+      {notifInfo && (
         <div className="bg-brand/8 border border-brand/20 rounded-xl px-4 py-2.5 text-sm text-brand font-semibold flex flex-wrap items-center gap-x-2">
-          ✓ Publicado · {savedInfo.at.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+          ✓ Publicado · {notifInfo.at.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
           <span className="text-slate-500 font-normal">
-            {savedInfo.persisted === 'supabase'
-              ? '· Visible para todos los miembros'
-              : '· Guardado localmente (dev)'}
-            {savedInfo.pushed != null && ` · 🔔 ${savedInfo.pushed} enviadas`}
+            {notifInfo.skipped
+              ? '· Push no configurado (solo guardado)'
+              : notifInfo.pushed != null
+              ? `· 🔔 ${notifInfo.pushed} notificaciones enviadas`
+              : '· Visible para los miembros'}
           </span>
         </div>
       )}
 
       {preview ? (
-        <RocoWeekPlan week={plan} />
+        <PremiumWeekPlan week={plan} />
       ) : (
-        <>
-          <WeekPicker weekId={weekId} setWeekId={setWeekId} />
-          <DayTabs plan={plan} activeDay={activeDay} setActiveDay={setActiveDay} />
-          {currentActivity && (
-            <ActivityEditor
-              key={currentActivity.id}
-              activity={currentActivity}
-              activeDay={activeDay}
-              setActiveDay={setActiveDay}
-              plan={plan}
-              onPatch={patch => updateActivity(currentActivity.id, patch)}
-              onShareDay={day => shareDay(day, currentActivity.id)}
-              onUnshareDay={unshareDay}
-            />
-          )}
-        </>
+        <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-5 items-start">
+          {/* Columna editor */}
+          <div className="flex flex-col gap-5 min-w-0">
+            {/* Week bar */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <div className="sm:flex-1">
+                <WeekPicker weekId={weekId} setWeekId={setWeekId} />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 flex-wrap">
+              <SmallBtn icon={Copy}    label="Duplicar semana anterior" onClick={duplicatePrevWeek} />
+              <SmallBtn icon={RotateCcw} label="Reset semana" onClick={resetWeek} />
+              <SmallBtn icon={Trash2}  label="Borrar" onClick={clearWeek} danger />
+              <button
+                onClick={() => setShowMsgs(true)}
+                className="xl:hidden h-8 px-3 inline-flex items-center gap-1.5 rounded-lg border border-brand/30 bg-brand/10 text-brand text-xs font-bold ml-auto"
+              >
+                Mensajes
+              </button>
+            </div>
+
+            {/* Overview de los 7 días */}
+            <WeekOverview plan={plan} activeDay={activeDay} setActiveDay={setActiveDay} />
+
+            {/* Detalle de la sesión */}
+            {currentActivity && (
+              <ActivityEditor
+                key={currentActivity.id}
+                activity={currentActivity}
+                activeDay={activeDay}
+                setActiveDay={setActiveDay}
+                plan={plan}
+                onPatch={patch => updateActivity(currentActivity.id, patch)}
+                onShareDay={day => shareDay(day, currentActivity.id)}
+                onUnshareDay={unshareDay}
+              />
+            )}
+          </div>
+
+          {/* Panel mensajes (desktop) */}
+          <div className="hidden xl:block sticky top-4 h-[calc(100dvh-2rem)]">
+            <ReusableMessagesPanel onInsert={insertMessage} />
+          </div>
+        </div>
       )}
+
+      {/* Panel mensajes (mobile drawer) */}
+      {showMsgs && (
+        <div className="xl:hidden fixed inset-0 z-50 flex" onClick={() => setShowMsgs(false)}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div className="relative ml-auto w-[88%] max-w-sm h-full p-3" onClick={e => e.stopPropagation()}>
+            <ReusableMessagesPanel onInsert={insertMessage} />
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ── Save status indicator ───────────────────────────────────────────────── */
+
+function SaveStatus({ status, savedAt }) {
+  const map = {
+    idle:   { icon: CloudCheck, text: 'Sin cambios',  cls: 'text-slate-500' },
+    saving: { icon: Loader2,    text: 'Guardando…',   cls: 'text-slate-400' },
+    saved:  { icon: CloudCheck, text: savedAt ? `Guardado ${savedAt.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}` : 'Guardado', cls: 'text-brand' },
+    error:  { icon: CloudOff,   text: 'Error al guardar', cls: 'text-red-400' },
+  }
+  const s = map[status] ?? map.idle
+  const Icon = s.icon
+  return (
+    <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold ${s.cls}`}>
+      <Icon size={13} className={status === 'saving' ? 'animate-spin' : ''} />
+      {s.text}
+    </span>
+  )
+}
+
+function SmallBtn({ icon: Icon, label, onClick, danger }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`h-8 px-3 inline-flex items-center gap-1.5 rounded-lg border text-xs font-bold transition-colors ${
+        danger
+          ? 'border-white/[0.06] bg-white/[0.03] text-slate-400 hover:text-red-400 hover:bg-red-500/10 hover:border-red-500/20'
+          : 'border-white/[0.06] bg-white/[0.03] text-slate-300 hover:text-white hover:bg-white/[0.08]'
+      }`}
+    >
+      <Icon size={13} /> {label}
+    </button>
+  )
+}
+
+/* ── Week overview (7 días horizontal) ───────────────────────────────────── */
+
+function WeekOverview({ plan, activeDay, setActiveDay }) {
+  return (
+    <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
+      {DAY_KEYS.map(d => {
+        const a = getActivityForDay(plan, d)
+        const type = a?.badge?.type ?? 'rest'
+        const c = TYPE_BG[type]
+        const isActive = d === activeDay
+        const isRest = a?.rest || type === 'rest'
+        const turnos = (a?.turnos ?? []).filter(t => t.day === d)
+        return (
+          <button
+            key={d}
+            onClick={() => setActiveDay(d)}
+            className={`flex flex-col gap-2 p-2.5 rounded-xl border text-left transition-colors min-h-[92px] ${
+              isActive
+                ? 'border-brand/50 bg-brand/[0.06]'
+                : 'border-white/[0.06] bg-card/60 hover:border-white/[0.12] hover:bg-white/[0.03]'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className={`text-[11px] font-black uppercase tracking-wide ${isActive ? 'text-brand' : 'text-white'}`}>
+                {DAY_ABBREV[d]}
+              </span>
+              <span className={`h-1.5 w-1.5 rounded-full ${c.dot}`} />
+            </div>
+            {isRest ? (
+              <span className="text-[10px] text-slate-600 uppercase tracking-wide">Descanso</span>
+            ) : (
+              <div className="flex flex-col gap-1">
+                {turnos.length === 0 && <span className="text-[10px] text-slate-600">Sin turnos</span>}
+                {turnos.slice(0, 3).map((t, i) => (
+                  <span key={i} className="text-[10px] font-bold text-brand bg-brand/10 rounded px-1.5 py-0.5 truncate">
+                    {t.text.replace(/^⏰\s*/, '')}
+                  </span>
+                ))}
+              </div>
+            )}
+          </button>
+        )
+      })}
     </div>
   )
 }
@@ -411,31 +569,6 @@ function WeekPicker({ weekId, setWeekId }) {
   )
 }
 
-/* ── Day tabs (segmented) ────────────────────────────────────────────────── */
-
-function DayTabs({ plan, activeDay, setActiveDay }) {
-  return (
-    <div className="flex gap-1 p-1 rounded-xl bg-black/20 border border-white/[0.06] overflow-x-auto [scrollbar-width:none]">
-      {DAY_KEYS.map(d => {
-        const a = getActivityForDay(plan, d)
-        const type = a?.badge?.type ?? 'rest'
-        const isActive = d === activeDay
-        return (
-          <button
-            key={d}
-            onClick={() => setActiveDay(d)}
-            className={`flex-1 min-w-[52px] flex flex-col items-center gap-1.5 px-2 py-2.5 rounded-lg text-xs font-bold transition-colors ${
-              isActive ? 'bg-card text-white shadow-sm shadow-black/40' : 'text-slate-500 hover:text-slate-300'
-            }`}
-          >
-            <span className="uppercase tracking-wide">{DAY_ABBREV[d]}</span>
-            <span className={`h-1.5 w-1.5 rounded-full ${TYPE_BG[type].dot}`} />
-          </button>
-        )
-      })}
-    </div>
-  )
-}
 
 /* ── Activity editor ─────────────────────────────────────────────────────── */
 
