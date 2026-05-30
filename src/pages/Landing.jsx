@@ -2,8 +2,12 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../lib/AuthContext'
 
-const IG_URL   = 'https://www.instagram.com/bandurriastrailrunning/'
-const HERO_IMG = 'https://images.unsplash.com/photo-1551632811-561732d1e306?auto=format&fit=crop&w=1900&q=80'
+const IG_URL = 'https://www.instagram.com/bandurriastrailrunning/'
+// Foto del hero. Para usar la del equipo: dejá un archivo en public/hero.jpg
+// (grupo de trail runners corriendo en Bariloche) y se usa automáticamente.
+// Si no existe, cae a una foto de trail running de Unsplash.
+const HERO_FALLBACK = 'https://images.unsplash.com/photo-1530137073521-dc479e51a5fe?auto=format&fit=crop&w=1900&q=80'
+const HERO_IMG = '/hero.jpg'
 
 const PLANS = [
   {
@@ -67,7 +71,14 @@ export default function Landing() {
 
       {/* ── Hero ── */}
       <section id="hero">
-        <div className="bw-hero-bg" style={{ backgroundImage: `linear-gradient(to right,rgba(10,10,8,0.86) 38%,rgba(10,10,8,0.18) 100%),linear-gradient(to top,rgba(10,10,8,0.55) 0%,transparent 45%),url('${HERO_IMG}')` }} />
+        <div className="bw-hero-bg" style={{
+          backgroundImage:
+            // gradientes oscurecen izquierda + base (legibilidad de texto y botón)
+            'linear-gradient(to right,rgba(10,10,8,0.88) 28%,rgba(10,10,8,0.25) 100%),' +
+            'linear-gradient(to top,rgba(10,10,8,0.94) 0%,rgba(10,10,8,0.45) 26%,transparent 55%),' +
+            // foto local del equipo si existe, si no la de fallback
+            `url('${HERO_IMG}'),url('${HERO_FALLBACK}')`,
+        }} />
         <div className="bw-hero-noise" />
         <div className="bw-hero-content">
           <span className="bw-hero-tag">Comunidad · Bariloche · Patagonia</span>
@@ -192,9 +203,9 @@ const CSS = `
 .bw-hero-actions { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
 
 /* Buttons */
-.bw-btn-primary { display: inline-flex; align-items: center; gap: 8px; background: var(--acid); color: var(--dark); font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 14px 28px; border-radius: 4px; transition: transform 0.18s, box-shadow 0.18s; }
-.bw-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(200,255,0,0.25); }
-.bw-btn-ghost { display: inline-flex; align-items: center; gap: 8px; color: var(--white); font-size: 13px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; }
+.bw-btn-primary { display: inline-flex; align-items: center; gap: 8px; background: var(--acid); color: var(--dark); font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; padding: 15px 30px; border-radius: 4px; box-shadow: 0 8px 28px rgba(0,0,0,0.45), 0 0 0 1px rgba(200,255,0,0.5); transition: transform 0.18s, box-shadow 0.18s; }
+.bw-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 36px rgba(200,255,0,0.3), 0 0 0 1px var(--acid); }
+.bw-btn-ghost { display: inline-flex; align-items: center; gap: 8px; color: var(--white); font-size: 13px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; text-shadow: 0 2px 8px rgba(0,0,0,0.7); }
 .bw-btn-ghost .bw-arrow { transition: transform 0.18s; }
 .bw-btn-ghost:hover .bw-arrow { transform: translateX(4px); }
 .bw-btn-outline { display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(200,255,0,0.4); color: var(--acid); font-size: 13px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; padding: 14px 28px; border-radius: 4px; transition: background 0.18s, border-color 0.18s; }
