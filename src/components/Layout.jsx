@@ -5,13 +5,15 @@ import {
   LayoutDashboard, Calendar, Trophy, BarChart3, Search as SearchIcon,
   Settings2, LogOut, Menu, ChevronLeft, ChevronRight, ChevronDown,
 } from 'lucide-react'
-import { isAdmin as checkAdmin } from '../lib/auth'
+import { isAdmin as checkAdminEmail } from '../lib/auth'
+import { isStaff } from '../lib/roles'
 
 export default function Layout({ children }) {
   const { user, profile, signOut } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const isAdmin  = checkAdmin(user?.email)
+  // Rol desde DB (members.role); fallback al email mientras carga el profile.
+  const isAdmin  = isStaff(profile) || checkAdminEmail(user?.email)
   const [collapsed, setCollapsed] = useState(false)
 
   async function handleSignOut() {
